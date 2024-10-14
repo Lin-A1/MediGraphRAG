@@ -21,7 +21,7 @@
 
 从每一到试题中提取一个知识点，将其转换为`dict`格式，以便后续转为`json`,值得注意的是由于模型处理速度偏慢，且由于本地数据清洗可能存在内存溢出，模型宕机等情况，在这里我选择进行多次`IO操作`，牺牲时间以保证安全性的策略，在每次读取后立即进行数据的存储
 
-清洗后的数据存储在[knowledge.json](data/knowledge.json)中：
+清洗后的数据存储在[knowledge.json](data/knowledge/knowledge.json)中：
  ```text
  [
     {

@@ -58,12 +58,12 @@ model = Ollama(model="qwen2.5")
 parser = JsonOutputParser()
 chain = prompt_template | model | parser
 
-if not os.path.exists('../data/knowledge.json'):
-    with open('../data/knowledge.json', 'w') as f:
+if not os.path.exists('../data/knowledge/knowledge.json'):
+    with open('../data/knowledge/knowledge.json', 'w') as f:
         json.dump([], f)
 
 # 读取现有数据
-with open('../data/knowledge.json', 'r') as f:
+with open('../data/knowledge/knowledge.json', 'r') as f:
     responses = json.load(f)
 
 for i in tqdm(content):
@@ -75,7 +75,7 @@ for i in tqdm(content):
                 if response:
                     responses.append(response)  # 添加响应
                     # 立即写入文件
-                    with open('../data/knowledge.json', 'w') as f:
+                    with open('../data/knowledge/knowledge.json', 'w') as f:
                         json.dump(responses, f, ensure_ascii=False, indent=4)
                     break
                 else:
