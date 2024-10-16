@@ -9,8 +9,6 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
      <p>
         <a href='https://github.com/Lin-A1/MediGraphRAG'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
         <img src='https://img.shields.io/github/stars/Lin-A1/MediGraphRAG?color=green&style=social' />
-    </p>
-     <p>
         <img src="https://img.shields.io/badge/python->=3.9.11-blue">
     </p>
 </div>
