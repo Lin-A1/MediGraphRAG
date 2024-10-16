@@ -17,9 +17,15 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
 ## 环境
 - `ollama`:[https://ollama.com/download](https://ollama.com/download)
 - `python`:`conda create -n med python=3.12`
+- `qwen2.5:14b`:`ollama run qwen2.5`
 
 ```
+# ollama
+curl -fsSL https://ollama.com/install.sh | sh # unbutu
 ollama run qwen2.5
+
+# python
+conda create -n med python=3.12
 conda activate med
 cd MediGraphRAG
 pip install -r requirements.txt
