@@ -1,7 +1,20 @@
  # MediGraphRAG
 
 ------
-大模型构建医疗知识图谱—>构建医疗知识图谱RAG
+![cover](data/cover.png)
+
+MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（Retrieval-Augmented Generation）方法，提升医学领域的信息管理与应用效率。项目通过知识点抽取、关系提取和知识融合，解决大模型在生成过程中可能出现的幻觉问题，确保生成内容的准确性和可靠性。最终目标是为医学教育和实践提供一个动态、准确的知识支持系统。
+
+<div align='center'>
+     <p>
+        <a href='https://github.com/Lin-A1/MediGraphRAG'><img src='https://img.shields.io/badge/Project-Page-Green'></a>
+        <img src='https://img.shields.io/github/stars/Lin-A1/MediGraphRAG?color=green&style=social' />
+    </p>
+     <p>
+        <img src="https://img.shields.io/badge/python->=3.9.11-blue">
+    </p>
+</div>
+
 
 ## 数据来源
 
@@ -24,7 +37,11 @@
 
 从每一到试题中提取一个知识点，将其转换为`dict`格式，以便后续转为`json`,值得注意的是由于模型处理速度偏慢，且由于本地数据清洗可能存在内存溢出，模型宕机等情况，在这里我选择进行多次`IO操作`，牺牲时间以保证安全性的策略，在每次读取后立即进行数据的存储
 
-清洗后的数据存储在[knowledge.json](data/knowledge/knowledge.json)中：
+清洗后的数据存储在[knowledge.json](data/knowledge/knowledge.json)中
+
+<details>
+<summary> knowledge.json </summary>
+    
  ```text
  [
     {
@@ -38,11 +55,16 @@
     }
   ]
  ```
+</details>
+   
 #### 2. 关系抽取
 
 - **[graphbuild.py](dataProcess/graphbuild.py)**
 
 在前面我们提取知识点的基础上从知识点中提取数据，同样的我们采用`qwen2.5:14b`进行演本的提取，大致流程与前面知识点抽取的一致，但是需要注意的是为我们需要在`promat`中暗示好我们所需要的实体，与关系类别，否则他将可能抽取各种奇怪的实体与关系，这会让我们在后期进行知识融合的过程十分不利
+
+<details>
+<summary> 实体关系 </summary>
 
 ```text
 - 实体字段
@@ -62,9 +84,15 @@
 
 ```
 
+</details>
+
 由于我们任务处理的字段过多，我们实行两步走的策略，将知识中的实体抽取后，再让模型从中寻觅关系
  
-初步的知识图谱数据存储在[graph.json](data/knowledge/graph.json)中：   
+初步的知识图谱数据存储在[graph.json](data/knowledge/graph.json)中
+
+<details>
+<summary> 图谱存储格式 </summary>
+    
 ```text
 {
   "knowledge": "胰岛素是调节血糖水平的重要激素，胰腺是其主要分泌腺体。",
@@ -100,6 +128,9 @@
 }
 
 ```
+    
+</details>
+    
 比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[graphcheck.py](dataProcess/graphcheck.py)进行定位，我们将在进行知识融合前给出修复的脚本
 
 大模型有比较致命的弱点是他在知识图谱抽取这方面，运行效率并不高，这一步可以通过传统NLP进行关系的抽取

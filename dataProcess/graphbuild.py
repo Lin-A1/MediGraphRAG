@@ -12,7 +12,7 @@ import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 
-data = pd.read_json('../data//knowledge/knowledge.json')
+data = pd.read_json('../data//knowledge/knowledge3.json')
 data = data.drop_duplicates(keep='last',ignore_index=True)
 
 systemContent = r"""任务：  
@@ -169,7 +169,7 @@ def process_knowledge(i):
 
 def process_all(data, max_workers=5):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(process_knowledge, i): i for i in data['knowledge'][4855:]}
+        futures = {executor.submit(process_knowledge, i): i for i in data['knowledge']}
         
         for future in tqdm(as_completed(futures), total=len(futures)):
             result = future.result()
