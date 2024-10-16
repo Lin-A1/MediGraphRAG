@@ -12,7 +12,7 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
      </p>
      <p>
         <img src="https://img.shields.io/badge/python->=3.9.11-blue">
-        <img src="https://img.shields.io/badge/ollama">
+        <img src="https://img.shields.io/badge/ollama-available-blue">
     </p>
 </div>
 
