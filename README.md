@@ -36,8 +36,9 @@ pip install -r requirements.txt
 
 ## 数据来源
 
-- `医学考试试题` 
-- `医疗书籍`：https://github.com/scienceasdf/medical-books
+- `顶层数据`->`医学考试试题` :已经进行知识的抽取，存储在`data/knowledge`中
+- `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
+- `医疗词向量`：https://github.com/WENGSYX/Chinese-Word2vec-Medicine.git -> [data/vector.txt]
 
 ## 知识图谱构建
 
