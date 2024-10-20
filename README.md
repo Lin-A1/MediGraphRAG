@@ -22,7 +22,7 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
 - `python`:`conda create -n med python=3.12`
 - `qwen2.5:14b`:`ollama run qwen2.5`
 
-```
+```sh
 # ollama
 curl -fsSL https://ollama.com/install.sh | sh # unbutu
 ollama run qwen2.5
@@ -36,8 +36,9 @@ pip install -r requirements.txt
 
 ## 数据来源
 
-- `医学考试试题` 
-- `医疗书籍`：https://github.com/scienceasdf/medical-books
+- `顶层数据`->`医学考试试题` :已经进行知识的抽取，存储在`data/knowledge`中
+- `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
+- `医疗词向量`：https://github.com/WENGSYX/Chinese-Word2vec-Medicine.git -> [data/vector.txt]
 
 ## 知识图谱构建
 
@@ -47,7 +48,7 @@ pip install -r requirements.txt
 
 #### 1. 知识点抽取
 
-- **[dataextr.py](dataProcess/dataextr.py)**
+- **[dataclean.py](dataProcess/dataclean.py)**
 
 通过`qwen2.5:14b`从医学试题中抽取考题知识点，我们需要设置`promat`暗示模型需要进行知识的提取，而不是进行该题目的解题
 
@@ -60,7 +61,7 @@ pip install -r requirements.txt
 <details>
 <summary> knowledge.json </summary>
     
- ```text
+ ```json
  [
     {
         "knowledge": "急性造血停滞的特点包括突然出现的全血细胞减少、网织红细胞可降至零以及骨髓中可见巨大原红细胞。此病通常在无血液病的患者中发生，且其病程常呈自限性，在适当的支持治疗下可以自然恢复。因此选项A（均发生于无血液病的患者）不符合急性造血停滞的特点。"
@@ -72,6 +73,7 @@ pip install -r requirements.txt
         "knowledge": "梗阻性黄疸的B超诊断最直接证据是肝内胆管普遍扩张以及胆总管直径增大。选项A中的描述‘肝内胆管普遍扩张，胆总管直径1.5cm’符合这一特征。因此，A是最直接的支持梗阻性黄疸诊断的结果。"
     }
   ]
+  
  ```
 </details>
    
@@ -84,7 +86,7 @@ pip install -r requirements.txt
 <details>
 <summary> 实体关系 </summary>
 
-```text
+```json
 - 实体字段
 疾病（Disease）：疾病名称、疾病编码（如ICD-10）、描述、分类（如慢性病、传染病等）。
 药物（Drug）：药物名称、剂量、适应症、禁忌、常见副作用。
@@ -111,7 +113,7 @@ pip install -r requirements.txt
 <details>
 <summary> 图谱存储格式 </summary>
     
-```text
+```json
 {
   "knowledge": "胰岛素是调节血糖水平的重要激素，胰腺是其主要分泌腺体。",
   "entities": [
@@ -148,6 +150,7 @@ pip install -r requirements.txt
 ```
     
 </details>
+    
     
 比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[graphcheck.py](dataProcess/graphcheck.py)中的`validate_json_format`函数进行错误的定位，`revise_format`函数配合大模型进行修复，但是具体出错的修改方式，可能得根据不同的基座模型修改
 
