@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 #### 1. 知识点抽取
 
-- **[dataclean.py](dataProcess/dataclean.py)**
+- **[dataextr.py](dataProcess/dataextr.py)**
 
 通过`qwen2.5:14b`从医学试题中抽取考题知识点，我们需要设置`promat`暗示模型需要进行知识的提取，而不是进行该题目的解题
 
