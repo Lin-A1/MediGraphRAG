@@ -1,19 +1,14 @@
+import warnings
+
+import pandas as pd
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-import os
-from docx import Document
-import json
-from tqdm import tqdm  
-
-import pandas as pd
-
-import warnings
 warnings.filterwarnings("ignore")
 
 data = pd.read_json('../data//knowledge/knowledge3.json')
-data = data.drop_duplicates(keep='last',ignore_index=True)
+data = data.drop_duplicates(keep='last', ignore_index=True)
 
 systemContent = r"""任务：  
 从给定的文本中自动抽取出实体
@@ -67,9 +62,9 @@ prompt_template = ChatPromptTemplate.from_messages(
     [("system", systemContent), ("user", "{text}")]
 )
 
-model = Ollama(model="qwen2.5",temperature=0.0)
+model = Ollama(model="qwen2.5", temperature=0.0)
 parser = JsonOutputParser()
-chain =  prompt_template | model | parser
+chain = prompt_template | model | parser
 
 summaryContent = r"""任务： 从给定的文本中自动抽取出实体及其相互关系，构建知识图谱，并将提取结果以结构化的形式呈现
 
@@ -134,8 +129,8 @@ summary_template = ChatPromptTemplate.from_messages(
     [("system", summaryContent), ("user", "{text}")]
 )
 
-summarymodel = Ollama(model="qwen2.5",temperature=0.0)
-summarychain =  summary_template | summarymodel | parser
+summarymodel = Ollama(model="qwen2.5", temperature=0.0)
+summarychain = summary_template | summarymodel | parser
 
 import json
 import os
@@ -148,6 +143,7 @@ if not os.path.exists('../data/graph.json'):
 
 with open('../data/graph.json', 'r') as f:
     responses = json.load(f)
+
 
 def process_knowledge(i):
     time = 0
@@ -167,19 +163,20 @@ def process_knowledge(i):
                 return None
             pass
 
+
 def process_all(data, max_workers=5):
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(process_knowledge, i): i for i in data['knowledge']}
-        
+
         for future in tqdm(as_completed(futures), total=len(futures)):
             result = future.result()
             if result is not None:
                 responses.append(result)  # 添加响应
-                
+
                 # 立即写入文件
                 with open('../data/graph.json', 'w') as f:
                     json.dump(responses, f, ensure_ascii=False, indent=4)
 
-# 调用处理函数
-process_all(data, max_workers=os.cpu_count()//2)
 
+# 调用处理函数
+process_all(data, max_workers=os.cpu_count() // 2)
