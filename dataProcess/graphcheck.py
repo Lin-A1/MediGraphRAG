@@ -1,13 +1,16 @@
-import json
-import warnings
-
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+
+import os
+from docx import Document
+import json
 from tqdm import tqdm
 
-warnings.filterwarnings("ignore")
+import pandas as pd
 
+import warnings
+warnings.filterwarnings("ignore")
 
 def revise_format(json_data):
     if "relations" in json_data and isinstance(json_data["relations"], str):
@@ -53,7 +56,6 @@ def revise_format(json_data):
 
     return json_data
 
-
 def check_json_file(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -74,13 +76,11 @@ def check_json_file(file_path):
 
     return data
 
-
 # 文件路径
 json_file_path = "../data/graph.json"
 
 # 检查 JSON 文件
 data = check_json_file(json_file_path)
-
 
 def validate_json_format(json_data):
     errors = []
@@ -161,14 +161,14 @@ prompt_template = ChatPromptTemplate.from_messages(
     [("system", systemContent), ("user", "{text}")]
 )
 
-model = Ollama(model="qwen2.5", temperature=0.0)
+model = Ollama(model="qwen2.5",temperature=0.0)
 parser = JsonOutputParser()
-chain = prompt_template | model | parser
+chain =  prompt_template | model | parser
 
-for idx, json_object in tqdm(enumerate(data)):
+for idx, json_object  in tqdm(enumerate(data)):
     error = validate_json_format(json_object)
     if error:
-        data[idx] = chain.invoke({'text': json_object})
+        data[idx] = chain.invoke({'text':json_object})
 
 data = [json_object for json_object in data if not validate_json_format(json_object)]
 
