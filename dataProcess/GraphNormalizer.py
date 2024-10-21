@@ -75,13 +75,6 @@ def check_json_file(file_path):
     return data
 
 
-# 文件路径
-json_file_path = "../data/graph.json"
-
-# 检查 JSON 文件
-data = check_json_file(json_file_path)
-
-
 def validate_json_format(json_data):
     errors = []
 
@@ -164,6 +157,12 @@ prompt_template = ChatPromptTemplate.from_messages(
 model = Ollama(model="qwen2.5", temperature=0.0)
 parser = JsonOutputParser()
 chain = prompt_template | model | parser
+
+# 文件路径
+json_file_path = "../data/graph.json"
+
+# 检查 JSON 文件
+data = check_json_file(json_file_path)
 
 for idx, json_object in tqdm(enumerate(data)):
     error = validate_json_format(json_object)

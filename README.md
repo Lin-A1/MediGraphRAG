@@ -39,6 +39,7 @@ pip install -r requirements.txt
 - `顶层数据`->`医学考试试题` :已经进行知识的抽取，存储在`data/knowledge`中
 - `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
 - `医疗词向量`：https://github.com/WENGSYX/Chinese-Word2vec-Medicine.git -> [data/vector.txt]
+- `嵌入模型`： https://huggingface.co/BAAI/bge-large-zh-v1.5 -> [model/bge-large-zh-v1.5]
 
 ## 知识图谱构建
 
@@ -48,7 +49,7 @@ pip install -r requirements.txt
 
 #### 1. 知识点抽取
 
-- **[dataclean.py](dataProcess/dataclean.py)**
+- **[KnowledgeExtractor.py](dataProcess/KnowledgeExtractor.py)**
 
 通过`qwen2.5:14b`从医学试题中抽取考题知识点，我们需要设置`promat`暗示模型需要进行知识的提取，而不是进行该题目的解题
 
@@ -79,7 +80,7 @@ pip install -r requirements.txt
    
 #### 2. 关系抽取
 
-- **[graphbuild.py](dataProcess/graphbuild.py)**
+- **[GraphBuilder.py](dataProcess/GraphBuilder.py)**
 
 在前面我们提取知识点的基础上从知识点中提取数据，同样的我们采用`qwen2.5:14b`进行演本的提取，大致流程与前面知识点抽取的一致，但是需要注意的是为我们需要在`promat`中暗示好我们所需要的实体，与关系类别，否则他将可能抽取各种奇怪的实体与关系，这会让我们在后期进行知识融合的过程十分不利
 
@@ -152,7 +153,7 @@ pip install -r requirements.txt
 </details>
     
     
-比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[graphcheck.py](dataProcess/graphcheck.py)中的`validate_json_format`函数进行错误的定位，`revise_format`函数配合大模型进行修复，但是具体出错的修改方式，可能得根据不同的基座模型修改
+比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[GraphNormalizer.py](dataProcess/GraphNormalizer.py)中的`validate_json_format`函数进行错误的定位，`revise_format`函数配合大模型进行修复，但是具体出错的修改方式，可能得根据不同的基座模型修改
 
 大模型有比较致命的弱点是他在知识图谱抽取这方面，运行效率并不高，这一步可以通过传统NLP进行关系的抽取
 

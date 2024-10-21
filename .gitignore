@@ -2,3 +2,5 @@
 !.gitignore
 **/__pycache__/
 data/vector.txt
+model/bge-large-zh-v1.5/pytorch_model.bin
+model/modified_bge-large-zh-v1.5/model.safetensors

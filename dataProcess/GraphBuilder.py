@@ -5,6 +5,11 @@ from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
+import json
+import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
+
 warnings.filterwarnings("ignore")
 
 data = pd.read_json('../data//knowledge/knowledge3.json')
@@ -132,10 +137,6 @@ summary_template = ChatPromptTemplate.from_messages(
 summarymodel = Ollama(model="qwen2.5", temperature=0.0)
 summarychain = summary_template | summarymodel | parser
 
-import json
-import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
 
 if not os.path.exists('../data/graph.json'):
     with open('../data/graph.json', 'w') as f:
