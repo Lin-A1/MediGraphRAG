@@ -11,7 +11,7 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
         <img src='https://img.shields.io/github/stars/Lin-A1/MediGraphRAG?color=green&style=social' />
      </p>
      <p>
-        <img src="https://img.shields.io/badge/python->=3.9.11-blue">
+        <img src="https://img.shields.io/badge/python->=3.11-blue">
         <img src="https://img.shields.io/badge/ollama-available-blue">
     </p>
 </div>
@@ -19,7 +19,7 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
 
 ## 环境
 - `ollama`:[https://ollama.com/download](https://ollama.com/download)
-- `python`:`conda create -n med python=3.12`
+- `python`:`conda create -n med python=3.11`
 - `qwen2.5:14b`:`ollama run qwen2.5`
 
 ```sh
@@ -28,9 +28,10 @@ curl -fsSL https://ollama.com/install.sh | sh # unbutu
 ollama run qwen2.5
 
 # python
-conda create -n med python=3.12
+conda create -n med python=3.11
 conda activate med
 cd MediGraphRAG
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
 pip install -r requirements.txt
 ```
 
