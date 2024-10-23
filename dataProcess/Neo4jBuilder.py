@@ -94,7 +94,7 @@ if __name__ == "__main__":
             if rela['entity1']:
                 entity1 = rela['entity1'].replace('/', '_')
             if rela['entity2']:
-                if type(rela['entity2']) == 'list':
+                if isinstance(rela['entity2'], list):
                     entity2 = [item.replace('/', '_') for item in rela['entity2']]
                 else:
                     entity2 = rela['entity2'].replace('/', '_')
@@ -102,7 +102,7 @@ if __name__ == "__main__":
             neo4j_handler.create_node(entity1)
             neo4j_handler.create_node(entity2)
             if entity1 and entity2 and rela['relation']:
-                if type(rela['entity2']) == 'list':
+                if isinstance(rela['entity2'], list):
                     for e2 in rela['entity2']:
                         neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=e2, properties={'relation': rela['relation']})
                 else:
