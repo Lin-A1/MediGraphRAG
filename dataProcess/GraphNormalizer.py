@@ -49,7 +49,7 @@ def revise_format(json_data):
                     if 'type' in rel:
                         rel['relation'] = rel.pop('type')
                     if 'relationship' in rel:
-                        rel['relation'] = rel.pop('relationship')
+                        rel['relation'] = rel.pop('relationship')    
 
     return json_data
 
@@ -159,7 +159,7 @@ parser = JsonOutputParser()
 chain = prompt_template | model | parser
 
 # 文件路径
-json_file_path = "../data/graph.json"
+json_file_path = "../data/graph/graph.json"
 
 # 检查 JSON 文件
 data = check_json_file(json_file_path)
@@ -175,5 +175,5 @@ for idx, json_object in enumerate(data):
     if validate_json_format(json_object):
         print(f'{idx}: {validate_json_format(json_object)}')
 
-with open('../data/graph.json', 'w', encoding='utf-8') as json_file:
+with open('../data/graph/graph.json', 'w', encoding='utf-8') as json_file:
     json.dump(data, json_file, ensure_ascii=False, indent=4)
