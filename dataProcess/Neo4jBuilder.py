@@ -11,57 +11,32 @@ with open('../data/graph/graph.json') as file:
 class Neo4jHandler:
     def __init__(self, uri, user, password):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
-
+        self.session = self.driver.session()
+    
     def close(self):
+        self.session.close()
         self.driver.close()
-
-    def entity_exists(self, entity_name, entity_type=None):
-        with self.driver.session() as session:
-            if entity_type:
-                query = f"MATCH (n:{entity_type} {{name: $name}}) RETURN COUNT(n) > 0 AS exists"
-            else:
-                query = "MATCH (n {name: $name}) RETURN COUNT(n) > 0 AS exists"
-            result = session.run(query, name=entity_name)
-            return 
-
     
     def create_node(self, entity_name, entity_type=None):
-        if self.entity_exists(entity_name, entity_type):
-            return
-        else:
-            with self.driver.session() as session:
-                if entity_type:
-                    query = f"CREATE (n:{entity_type} {{name: $name}})"
-                else:
-                    query = "CREATE (n {name: $name})"
-                session.run(query, name=entity_name)
+            if entity_type:
+                query = f"MERGE (n:`{entity_type}` {{name: $name}})"
+            else:
+                query = "MERGE (n {name: $name})"
+            self.session.run(query, name=entity_name)
 
-    
-    def relationship_exists(self, entity1_name, relation_type, entity2_name):
-        with self.driver.session() as session:
-            query = f"""
-            MATCH (a {{name: $entity1_name}})-[r:{relation_type}]->(b {{name: $entity2_name}})
-            RETURN COUNT(r) > 0 AS exists
-            """
-            result = session.run(query, entity1_name=entity1_name, entity2_name=entity2_name)
-            return 
-    
     def create_relationship(self, entity1_name, relation_type, entity2_name, properties=None):
-        if self.relationship_exists(entity1_name, relation_type, entity2_name):
-            return  # Relationship already exists
-        with self.driver.session() as session:
             if properties:
                 props = ', '.join([f"{key}: ${key}" for key in properties.keys()])
                 query = f"""
                 MATCH (a {{name: $entity1_name}}), (b {{name: $entity2_name}})
-                CREATE (a)-[:{relation_type} {{{props}}}]->(b)
+                MERGE (a)-[:`{relation_type}` {{{props}}}]->(b)
                 """
             else:
                 query = f"""
                 MATCH (a {{name: $entity1_name}}), (b {{name: $entity2_name}})
-                CREATE (a)-[:{relation_type}]->(b)
+                MERGE (a)-[:`{relation_type}`]->(b)
                 """
-            session.run(query, entity1_name=entity1_name, entity2_name=entity2_name, **(properties or {}))
+            self.session.run(query, entity1_name=entity1_name, entity2_name=entity2_name, **(properties or {}))
 
 
 if __name__ == "__main__":
@@ -72,15 +47,15 @@ if __name__ == "__main__":
     neo4j_handler = Neo4jHandler(uri, user, password)
 
     for d in tqdm(data):
-        knowledge = d['knowledge'].replace('/', '_')
+        knowledge = f"{d['knowledge']}"
         entities = d['entities']
         relation = d['relation']
         if knowledge != '':
             neo4j_handler.create_node(knowledge, "knowledge")
-        for entitie in entities:
-            entity_name = entitie['entity'].replace('/', '_')
-            entity_type = entitie['type'].replace('/', '_')
-            description = entitie['description'].replace('/', '_')
+        for entitiy in entities:
+            entity_name = f"{entitiy['entity']}"
+            entity_type = f"{entitiy['type']}"
+            description = f"{entitiy['description']}"
     
             neo4j_handler.create_node(entity_name=entity_name, entity_type=entity_type)
             neo4j_handler.create_node(description)
@@ -92,21 +67,26 @@ if __name__ == "__main__":
     
         for rela in relation:
             if rela['entity1']:
-                entity1 = rela['entity1'].replace('/', '_')
+                entity1 = f"{rela['entity1']}"
             if rela['entity2']:
                 if isinstance(rela['entity2'], list):
-                    entity2 = [item.replace('/', '_') for item in rela['entity2']]
+                    entity2 = [f"{item}" for item in rela['entity2']]
                 else:
-                    entity2 = rela['entity2'].replace('/', '_')
+                    entity2 = f"{rela['entity2']}"
     
             neo4j_handler.create_node(entity1)
-            neo4j_handler.create_node(entity2)
+
             if entity1 and entity2 and rela['relation']:
                 if isinstance(rela['entity2'], list):
                     for e2 in rela['entity2']:
-                        neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=e2, properties={'relation': rela['relation']})
+                        neo4j_handler.create_node(e2)
+                        neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=f"{e2}", properties={'relation': rela['relation']})
                 else:
+                    neo4j_handler.create_node(entity2)
                     neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=entity2, properties={'relation': rela['relation']})
+
+    Neo4jHandler.close()
+    
 
 
 

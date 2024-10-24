@@ -27,6 +27,10 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
 curl -fsSL https://ollama.com/install.sh | sh # unbutu
 ollama run qwen2.5
 
+# docker
+docker pull neo4j:latest
+docker run --name med-neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/test neo4j:latest
+
 # python
 conda create -n med python=3.11
 conda activate med
@@ -108,7 +112,7 @@ pip install -r requirements.txt
 
 </details>
 
-由于我们任务处理的字段过多，我们实行两步走的策略，将知识中的实体抽取后，再让模型从中寻觅关系
+由于我们任务处理的字段过多，我们实行两步走的策略构建工作流，将知识中的实体抽取后，再让模型从中寻觅关系
  
 初步的知识图谱数据存储在[graph.json](data/knowledge/graph.json)中
 
@@ -158,6 +162,40 @@ pip install -r requirements.txt
 
 大模型有比较致命的弱点是他在知识图谱抽取这方面，运行效率并不高，这一步可以通过传统NLP进行关系的抽取
 
-#### 3. 知识融合
+#### 3. Neo4j构建
 
-等待。。。
+- **[Neo4jBuilder.py](dataProcess/Neo4jBuilder.py)**
+  
+前面处理的存储格式明显不足以我们进行图片的检索，故我们选择使用Neo4j进行我们图谱的存取。
+
+Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格的格式要求
+
+![graph](data/graph.png)
+
+我们以`relation`、`entity`为实体,`type`、`description`为实体属性，构建实体知识指向和实体属性关系，以便后续进行知识检索
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
