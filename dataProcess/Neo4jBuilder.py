@@ -57,11 +57,15 @@ if __name__ == "__main__":
             entity_type = f"{entitiy['type']}"
             description = f"{entitiy['description']}"
     
-            neo4j_handler.create_node(entity_name=entity_name, entity_type=entity_type)
+            neo4j_handler.create_node(entity_name=entity_name)
             neo4j_handler.create_node(description)
+            neo4j_handler.create_node(entity_type)
             if entity_name and description:
                 neo4j_handler.create_relationship(entity1_name=entity_name, relation_type='description', entity2_name=description)
-    
+
+            if entity_name and entity_type:
+                neo4j_handler.create_relationship(entity1_name=entity_name, relation_type='type', entity2_name=entity_type)
+            
             if knowledge != '' and entity_name and knowledge:
                 neo4j_handler.create_relationship(entity1_name=entity_name, relation_type='knowledge', entity2_name=knowledge)
     
