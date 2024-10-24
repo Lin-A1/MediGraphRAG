@@ -100,7 +100,7 @@ if __name__ == "__main__":
                     neo4j_handler.create_node(entity_name=entity2, entity_type='entity')
                     neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=entity2, properties={'relation': rela['relation']})
 
-    Neo4jHandler.close()
+    neo4j_handler.close()
     
 
 
