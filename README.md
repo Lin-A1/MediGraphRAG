@@ -183,7 +183,7 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 - 
 调用`bge-large-zh-v1.5`- `https://huggingface.co/BAAI/bge-large-zh-v1.5 `后续可能考虑更换医疗领域的预训练嵌入模型
 
-#### 2.Neo4j数据提取
+#### 2. Neo4j数据提取
 
 - **[Neo4jEntityFetcher.py](rag/Neo4jEntityFetcher.py)**
 
