@@ -8,3 +8,5 @@ gensim
 transformers
 
 redis 
+neo4j
+faiss-gpu

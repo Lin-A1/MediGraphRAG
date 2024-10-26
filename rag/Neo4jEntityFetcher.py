@@ -30,6 +30,16 @@ class Neo4jEntityFetcher:
             # 将实体的属性存入列表
             entities = [{"id": record["n"].element_id, "labels": list(record["n"].labels), "properties": dict(record["n"])} for record in result]
             return entities
+            
+    # 根据 ID 获取实体
+    def get_entity_by_id(self, element_id):
+        with self.driver.session() as session:
+            query = "MATCH (n) WHERE elementId(n) = $element_id RETURN n"
+            result = session.run(query, element_id=element_id)
+            # 获取实体的属性
+            entity = [{"id": record["n"].element_id, "labels": list(record["n"].labels), "properties": dict(record["n"])} for record in result]
+            return entity
+
 
     # 关闭驱动
     def close(self):

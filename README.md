@@ -43,7 +43,6 @@ pip install -r requirements.txt
 
 - `顶层数据`->`医学考试试题` :已经进行知识的抽取，存储在`data/knowledge`中
 - `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
-- `医疗词向量`：https://github.com/WENGSYX/Chinese-Word2vec-Medicine.git -> [data/vector.txt]
 - `嵌入模型`： https://huggingface.co/BAAI/bge-large-zh-v1.5 -> [model/bge-large-zh-v1.5]
 
 ## 知识图谱构建
@@ -176,11 +175,19 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 
 ### RAG
 
-加班ing
+- **[ragProcess.ipynb](rag/ragProcess.ipynb)**
 
+#### 1. 嵌入模型
 
+- **[Embedding.py](rag/Embedding.py)**
+- 
+调用`bge-large-zh-v1.5`- `https://huggingface.co/BAAI/bge-large-zh-v1.5 `后续可能考虑更换医疗领域的预训练嵌入模型
 
+#### 2.Neo4j数据提取
 
+- **[Neo4jEntityFetcher.py](rag/Neo4jEntityFetcher.py)**
+
+我们根据后续建模需求，分别构建了根据属性、标签、ID获取实体的方法以及获取全部实体的方法
 
 
 
