@@ -3,4 +3,5 @@
 **/__pycache__/
 data/faiss_index/faiss_index.index
 data/faiss_index/matedata.npy
+data/vector.txt
 model/bge-large-zh-v1.5/pytorch_model.bin
