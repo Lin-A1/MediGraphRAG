@@ -90,15 +90,41 @@ if __name__ == "__main__":
                     entity2 = f"{rela['entity2']}"
     
             neo4j_handler.create_node(entity_name=entity1, entity_type='entity')
-
+            
             if entity1 and entity2 and rela['relation']:
-                if isinstance(rela['entity2'], list):
-                    for e2 in rela['entity2']:
-                        neo4j_handler.create_node(entity_name=e2, entity_type='entity')
-                        neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=f"{e2}", properties={'relation': rela['relation']})
+                if isinstance(rela['entity1'], list):
+                    for e1 in rela['entity1']:
+                        neo4j_handler.create_node(entity_name=e1, entity_type='entity')
+                        if knowledge != '':
+                            neo4j_handler.create_relationship(entity1_name=e1, relation_type='knowledge', entity2_name=knowledge)
+
+                        if isinstance(rela['entity2'], list):
+                            for e2 in rela['entity2']:
+                                neo4j_handler.create_node(entity_name=e2, entity_type='entity')
+                                neo4j_handler.create_relationship(entity1_name=e1, relation_type='relation', entity2_name=f"{e2}", properties={'relation': rela['relation']})
+                                if knowledge != '':
+                                    neo4j_handler.create_relationship(entity1_name=e2, relation_type='knowledge', entity2_name=knowledge)
+                        else:
+                            neo4j_handler.create_node(entity_name=entity2, entity_type='entity')
+                            neo4j_handler.create_relationship(entity1_name=e1, relation_type='relation', entity2_name=entity2, properties={'relation': rela['relation']})
+                            if knowledge != '':
+                                    neo4j_handler.create_relationship(entity1_name=entity2, relation_type='knowledge', entity2_name=knowledge)
                 else:
-                    neo4j_handler.create_node(entity_name=entity2, entity_type='entity')
-                    neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=entity2, properties={'relation': rela['relation']})
+                    neo4j_handler.create_node(entity_name=entity1, entity_type='entity')               
+                    if knowledge != '':
+                            neo4j_handler.create_relationship(entity1_name=entity1, relation_type='knowledge', entity2_name=knowledge)
+         
+                    if isinstance(rela['entity2'], list):
+                        for e2 in rela['entity2']:
+                            neo4j_handler.create_node(entity_name=e2, entity_type='entity')
+                            neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=f"{e2}", properties={'relation': rela['relation']})
+                            if knowledge != '':
+                                neo4j_handler.create_relationship(entity1_name=e2, relation_type='knowledge', entity2_name=knowledge)
+                    else:
+                        neo4j_handler.create_node(entity_name=entity2, entity_type='entity')
+                        neo4j_handler.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=entity2, properties={'relation': rela['relation']})
+                        if knowledge != '':
+                                neo4j_handler.create_relationship(entity1_name=entity2, relation_type='knowledge', entity2_name=knowledge)
 
     neo4j_handler.close()
     

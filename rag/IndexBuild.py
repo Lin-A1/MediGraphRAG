@@ -13,6 +13,10 @@ user = "neo4j"  # Neo4j 用户名
 password = "password"  # Neo4j 密码
 fetcher = Neo4jEntityFetcher(uri, user, password)
 knowledge_entities = fetcher.get_entities_by_label("knowledge")
+knowledge_entities.extend(fetcher.get_entities_by_label("entity"))
+
+texts = [i['properties']['name'] for i in knowledge_entities] 
+ids = [i['id'] for i in knowledge_entities]
 
 texts = [i['properties']['name'] for i in knowledge_entities] 
 ids = [i['id'] for i in knowledge_entities]
