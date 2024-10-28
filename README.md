@@ -31,6 +31,11 @@ ollama run qwen2.5
 docker pull neo4j:latest
 docker run --name med-neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/test neo4j:latest
 
+# model
+cd model
+git lfs install
+git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+
 # python
 conda create -n med python=3.11
 conda activate med
@@ -44,6 +49,29 @@ pip install -r requirements.txt
 - `顶层数据`->`医学考试试题` :已经进行知识的抽取，存储在`data/knowledge`中
 - `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
 - `嵌入模型`： https://huggingface.co/BAAI/bge-large-zh-v1.5 -> [model/bge-large-zh-v1.5]
+
+## 快速开始
+```bash
+# 先构建好上面所描述环境
+
+# 拉取项目
+git clone git@github.com:Lin-A1/MediGraphRAG.git
+cd MediGraphRAG
+
+# 虚拟环境
+conda activate med
+
+# 创建neo4j知识图谱
+cd dataProcess
+python Neo4jBuilder.py
+
+# 构建faiss索引
+cd ../rag
+python IndexBuild.py
+
+# 进行实体生成（可以修改相关参数，如query_text、k以及任务模型的temperature等）
+python ragWorkflow.py
+```
 
 ## 知识图谱构建
 
@@ -282,7 +310,13 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 
 目前我们选用的基模型为`qwen2.5`,后续我们可以考虑更换将任务模型的基模型更换为医学大模型
 
+## 后续任务
 
+1. 扩大数据集
+2. 开发增加数据的接口
+3. 进行已有代码的封装，优化代码风格，对常用方法进行整合
+4. 调用整理的接口，进行任务的快速调用
+5. 将嵌入模型与任务模型更换为医学领域大模型
 
 
 
