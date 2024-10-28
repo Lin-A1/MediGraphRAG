@@ -1,6 +1,6 @@
 .*
 !.gitignore
 **/__pycache__/
-data/vector.txt/faiss_index/faiss_index.index
+data/faiss_index/faiss_index.index
+data/faiss_index/matedata.npy
 model/bge-large-zh-v1.5/pytorch_model.bin
-
