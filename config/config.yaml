@@ -1,0 +1,21 @@
+# Neo4j Database Configuration
+neo4j:
+  host: localhost
+  port: 7687
+  user: neo4j
+  password: password
+
+# Base directory for the project
+base_dir: /home/lin/work/code/DeepLearning/LLM/Medical
+
+# Save Directory
+save:
+  dir: ${base_dir}/save
+
+# Knowledge Directory
+knowledge:
+  dir: ${base_dir}/data/knowledge/data.json
+
+# Graph Directory
+graph:
+  dir: ${base_dir}/data/graph/data.json

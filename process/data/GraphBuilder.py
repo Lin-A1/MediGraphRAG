@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
-data = pd.read_json('../../data/knowledge/knowledge3.json')
+data = pd.read_json('../../data/knowledge/knowledge.json')
 data = data.drop_duplicates(keep='last', ignore_index=True)
 
 systemContent = r"""任务：  
