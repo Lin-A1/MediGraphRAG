@@ -189,17 +189,18 @@ class KnowledgeProcessor:
 
 
 if __name__ == "__main__":
-
     # 读取 YAML 配置文件
     with open('../config/config.yaml', 'r') as file:
         config = yaml.safe_load(file)
 
     # 解析环境变量
-    save_dir = os.path.expandvars(config['save']['dir'])
-
+    base_dir = config['base_dir']
+    save_dir = config['save_dir']
+    knowledge_dir = config['knowledge_file']
+    graph_dir = config['graph_file']
 
     processor = KnowledgeProcessor(
-        knowledge_file='../../data/knowledge/knowledge3.json',
-        graph_file='../../data/graph/graph.json'
+        knowledge_file=knowledge_dir,
+        graph_file=graph_dir
     )
     processor.process_all()

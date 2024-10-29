@@ -1,12 +1,15 @@
-langchain==0.3.1
+langchain
 langchain-community==0.3.1
 
-pandas 
+pandas
 tqdm
 
 gensim
 transformers
 
-redis 
+redis
 neo4j
 faiss-gpu
+yaml
+pyyaml
+numpy

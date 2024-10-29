@@ -37,7 +37,7 @@ git lfs install
 git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
 
 # python
-conda create -n med python=3.11
+conda create -n med python=3.10
 conda activate med
 cd MediGraphRAG
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
