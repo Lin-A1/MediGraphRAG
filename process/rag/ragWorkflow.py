@@ -8,8 +8,8 @@ from langchain_core.output_parsers import JsonOutputParser,StrOutputParser
 from langchain_community.llms import Ollama
 from langchain_core.prompts import ChatPromptTemplate
 
-loaded_index = faiss.read_index('../data/faiss_index/faiss_index.index')
-loaded_ids = np.load('../data/faiss_index/matedata.npy')
+loaded_index = faiss.read_index('../../data/faiss_index/faiss_index.index')
+loaded_ids = np.load('../../data/faiss_index/matedata.npy')
 
 query_text = '糖尿病'
 model, tokenizer = LoadModel()

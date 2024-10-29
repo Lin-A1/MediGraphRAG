@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
-data = pd.read_json('../data//knowledge/knowledge3.json')
+data = pd.read_json('../../data/knowledge/knowledge3.json')
 data = data.drop_duplicates(keep='last', ignore_index=True)
 
 systemContent = r"""任务：  
@@ -138,11 +138,11 @@ summarymodel = Ollama(model="qwen2.5", temperature=0.0)
 summarychain = summary_template | summarymodel | parser
 
 
-if not os.path.exists('../data/graph/graph.json'):
-    with open('../data/graph/graph.json', 'w') as f:
+if not os.path.exists('../../data/graph/graph.json'):
+    with open('../../data/graph/graph.json', 'w') as f:
         json.dump([], f)
 
-with open('../data/graph/graph.json', 'r') as f:
+with open('../../data/graph/graph.json', 'r') as f:
     responses = json.load(f)
 
 
@@ -175,7 +175,7 @@ def process_all(data, max_workers=5):
                 responses.append(result)  # 添加响应
 
                 # 立即写入文件
-                with open('../data/graph/graph.json', 'w') as f:
+                with open('../../data/graph/graph.json', 'w') as f:
                     json.dump(responses, f, ensure_ascii=False, indent=4)
 
 

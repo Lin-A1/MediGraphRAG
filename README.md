@@ -62,7 +62,7 @@ cd MediGraphRAG
 conda activate med
 
 # 创建neo4j知识图谱
-cd dataProcess
+cd data
 python Neo4jBuilder.py
 
 # 构建faiss索引
@@ -75,13 +75,13 @@ python ragWorkflow.py
 
 ## 知识图谱构建
 
-- **[dataProcess.ipynb](dataProcess/dataProcess.ipynb)**
+- **[dataProcess.ipynb](process/data/dataProcess.ipynb)**
 
 ### 知识图谱构建
 
 #### 1. 知识点抽取
 
-- **[KnowledgeExtractor.py](dataProcess/KnowledgeExtractor.py)**
+- **[KnowledgeExtractor.py](process/data/KnowledgeExtractor.py)**
 
 通过`qwen2.5:14b`从医学试题中抽取考题知识点，我们需要设置`promat`暗示模型需要进行知识的提取，而不是进行该题目的解题
 
@@ -112,7 +112,7 @@ python ragWorkflow.py
    
 #### 2. 关系抽取
 
-- **[GraphBuilder.py](dataProcess/GraphBuilder.py)**
+- **[GraphBuilder.py](process/data/GraphBuilder.py)**
 
 在前面我们提取知识点的基础上从知识点中提取数据，同样的我们采用`qwen2.5:14b`进行演本的提取，大致流程与前面知识点抽取的一致，但是需要注意的是为我们需要在`promat`中暗示好我们所需要的实体，与关系类别，否则他将可能抽取各种奇怪的实体与关系，这会让我们在后期进行知识融合的过程十分不利
 
@@ -185,13 +185,13 @@ python ragWorkflow.py
 </details>
     
     
-比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[GraphNormalizer.py](dataProcess/GraphNormalizer.py)中的`validate_json_format`函数进行错误的定位，`revise_format`函数配合大模型进行修复，但是具体出错的修改方式，可能得根据不同的基座模型修改
+比较遗憾的是由于大模型幻觉的原因，大模型出现了私自篡改我们字段的情况，比如最终生成的数据中没有`knowledge`,实体间他们使用了别的变量名等，目前这种情况可以通过[GraphNormalizer.py](process/data/GraphNormalizer.py)中的`validate_json_format`函数进行错误的定位，`revise_format`函数配合大模型进行修复，但是具体出错的修改方式，可能得根据不同的基座模型修改
 
 大模型有比较致命的弱点是他在知识图谱抽取这方面，运行效率并不高，这一步可以通过传统NLP进行关系的抽取
 
 #### 3. Neo4j构建
 
-- **[Neo4jBuilder.py](dataProcess/Neo4jBuilder.py)**
+- **[Neo4jBuilder.py](process/data/Neo4jBuilder.py)**
   
 前面处理的存储格式明显不足以我们进行图片的检索，故我们选择使用Neo4j进行我们图谱的存取。
 
@@ -203,29 +203,29 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 
 ### RAG
 
-- **[ragProcess.ipynb](rag/ragProcess.ipynb)**
+- **[ragProcess.ipynb](process/rag/ragProcess.ipynb)**
 
 #### 1. 嵌入模型
 
-- **[Embedding.py](rag/Embedding.py)**
+- **[Embedding.py](process/rag/Embedding.py)**
 - 
 调用`bge-large-zh-v1.5`- `https://huggingface.co/BAAI/bge-large-zh-v1.5 `后续可能考虑更换医疗领域的预训练嵌入模型
 
 #### 2. Neo4j数据提取
 
-- **[Neo4jEntityFetcher.py](rag/Neo4jEntityFetcher.py)**
+- **[Neo4jEntityFetcher.py](process/rag/Neo4jEntityFetcher.py)**
 
 我们根据后续建模需求，分别构建了根据属性、标签、ID获取实体的方法以及获取全部实体的方法
 
 #### 3. FAISS索引生成
 
-- **[IndexBuild.py](rag/IndexBuild.py)**
+- **[IndexBuild.py](process/rag/IndexBuild.py)**
 
 我们这里使用前面定义的`Embedding`模型进行`知识点`、`实体`的编码，仅存储编码后的数据以及使用numpy存储相对应的neo4j的id，我们这里的是`欧几里得距离`进行相似度计算
 
 #### 4. 搭建RAG工作流生成实体
 
-- **[ragWorkflow.py](rag/ragWorkflow.py)**
+- **[ragWorkflow.py](process/rag/ragWorkflow.py)**
 
 到这一步我们开始调用前面三点的数据进行搭建我们的`医学试题生成`任务的`大模型工作流`
 

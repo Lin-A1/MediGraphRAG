@@ -9,7 +9,7 @@ from transformers import AutoModel, AutoTokenizer
 import torch
 import torch.nn as nn
 
-def LoadModel(model_path='../model/bge-large-zh-v1.5'):
+def LoadModel(model_path='../../model/bge-large-zh-v1.5'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  
 
     model = AutoModel.from_pretrained(model_path).to(device)  

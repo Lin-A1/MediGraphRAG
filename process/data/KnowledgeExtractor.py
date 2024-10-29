@@ -86,6 +86,6 @@ class MedicalQuestionAssistant:
 
 # 使用示例
 folder_path = '/home/lin/work/code/DeepLearning/LLM/file/医疗语料/西医综合/'
-output_path = '..data/knowledge.json'
+output_path = '../../data/knowledge.json'
 assistant = MedicalQuestionAssistant(folder_path, output_path)
 assistant.process_questions()
