@@ -7,3 +7,4 @@ data/vector.txt
 model/bge-large-zh-v1.5/pytorch_model.bin
 data/knowledge/knowledge-Copy1.json
 data/graph/graph-Copy1.json
+data/medical-books

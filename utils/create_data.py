@@ -194,13 +194,13 @@ if __name__ == "__main__":
         config = yaml.safe_load(file)
 
     # 解析环境变量
-    base_dir = config['base_dir']
-    save_dir = config['save_dir']
-    knowledge_dir = config['knowledge_file']
-    graph_dir = config['graph_file']
+    base_dir = config['base']['dir']
+    save_dir = os.path.join(base_dir, config['save']['dir'])
+    knowledge_dir = os.path.join(base_dir, config['knowledge']['dir'])
+    graph_dir = os.path.join(save_dir, config['graph']['dir'])
 
-    processor = KnowledgeProcessor(
-        knowledge_file=knowledge_dir,
-        graph_file=graph_dir
-    )
-    processor.process_all()
+    # processor = KnowledgeProcessor(
+    #     knowledge_file=knowledge_dir,
+    #     graph_file=graph_dir
+    # )
+    # processor.process_all()
