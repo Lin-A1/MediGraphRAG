@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -8,9 +9,9 @@ import yaml
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from neo4j import GraphDatabase
 from tqdm import tqdm
 
-warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore")
 
 
@@ -360,6 +361,151 @@ class GraphNormalizer:
             json.dump(data, json_file, ensure_ascii=False, indent=4)
 
 
+class Neo4jKnowledgeGraph:
+    def __init__(self, uri, user, password, json_file_path):
+        self.uri = uri
+        self.user = user
+        self.password = password
+        self.json_file_path = json_file_path
+        self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+        self.session = self.driver.session()
+        self.data = self.load_data()
+
+    def load_data(self):
+        """加载JSON数据"""
+        with open(self.json_file_path, 'r', encoding='utf-8') as file:
+            return json.load(file)
+
+    def close(self):
+        """关闭Neo4j连接"""
+        self.session.close()
+        self.driver.close()
+
+    def create_node(self, entity_name, entity_type=None):
+        """创建节点"""
+        for _ in range(3):
+            try:
+                if entity_type:
+                    query = f"MERGE (n:`{entity_type}` {{name: $name}})"
+                else:
+                    query = "MERGE (n {name: $name})"
+                self.session.run(query, name=entity_name)
+                break
+            except:
+                time.sleep(2)
+
+    def create_relationship(self, entity1_name, relation_type, entity2_name, properties=None):
+        """创建关系"""
+        for _ in range(3):
+            try:
+                if properties:
+                    props = ', '.join([f"{key}: ${key}" for key in properties.keys()])
+                    query = f"""
+                    MATCH (a {{name: $entity1_name}}), (b {{name: $entity2_name}})
+                    MERGE (a)-[:`{relation_type}` {{{props}}}]->(b)
+                    """
+                else:
+                    query = f"""
+                    MATCH (a {{name: $entity1_name}}), (b {{name: $entity2_name}})
+                    MERGE (a)-[:`{relation_type}`]->(b)
+                    """
+                self.session.run(query, entity1_name=entity1_name, entity2_name=entity2_name, **(properties or {}))
+                break
+            except:
+                time.sleep(2)
+
+    def process_data(self):
+        """处理数据并将其添加到Neo4j"""
+        for d in tqdm(self.data, desc="up Neo4j"):
+            knowledge = f"{d['knowledge']}"
+            entities = d['entities']
+            relation = d['relation']
+
+            # 处理知识节点
+            if knowledge != '':
+                self.create_node(entity_name=knowledge, entity_type="knowledge")
+
+            # 处理实体节点
+            for entity in entities:
+                entity_name = f"{entity['entity']}"
+                entity_type = f"{entity['type']}"
+                description = f"{entity['description']}"
+
+                self.create_node(entity_name=entity_name, entity_type='entity')
+                self.create_node(entity_name=description, entity_type='description')
+                self.create_node(entity_name=entity_type, entity_type='type')
+
+                # 创建关系
+                if entity_name and description:
+                    self.create_relationship(entity1_name=entity_name, relation_type='description',
+                                             entity2_name=description)
+                if entity_name and entity_type:
+                    self.create_relationship(entity1_name=entity_name, relation_type='type', entity2_name=entity_type)
+                if knowledge != '' and entity_name and knowledge:
+                    self.create_relationship(entity1_name=entity_name, relation_type='knowledge',
+                                             entity2_name=knowledge)
+
+            # 处理关系数据
+            for rela in relation:
+                entity1 = f"{rela['entity1']}"
+                if isinstance(rela['entity2'], list):
+                    entity2 = [f"{item}" for item in rela['entity2']]
+                else:
+                    entity2 = f"{rela['entity2']}"
+
+                self.create_node(entity_name=entity1, entity_type='entity')
+
+                # 处理多对多关系
+                if isinstance(rela['entity1'], list):
+                    for e1 in rela['entity1']:
+                        self.create_node(entity_name=e1, entity_type='entity')
+                        if knowledge != '':
+                            self.create_relationship(entity1_name=e1, relation_type='knowledge', entity2_name=knowledge)
+
+                        if isinstance(rela['entity2'], list):
+                            for e2 in rela['entity2']:
+                                self.create_node(entity_name=e2, entity_type='entity')
+                                self.create_relationship(entity1_name=e1, relation_type='relation',
+                                                         entity2_name=f"{e2}",
+                                                         properties={'relation': rela['relation']})
+                                if knowledge != '':
+                                    self.create_relationship(entity1_name=e2, relation_type='knowledge',
+                                                             entity2_name=knowledge)
+                        else:
+                            self.create_node(entity_name=entity2, entity_type='entity')
+                            self.create_relationship(entity1_name=e1, relation_type='relation', entity2_name=entity2,
+                                                     properties={'relation': rela['relation']})
+                            if knowledge != '':
+                                self.create_relationship(entity1_name=entity2, relation_type='knowledge',
+                                                         entity2_name=knowledge)
+                else:
+                    self.create_node(entity_name=entity1, entity_type='entity')
+                    if knowledge != '':
+                        self.create_relationship(entity1_name=entity1, relation_type='knowledge',
+                                                 entity2_name=knowledge)
+
+                    if isinstance(rela['entity2'], list):
+                        for e2 in rela['entity2']:
+                            self.create_node(entity_name=e2, entity_type='entity')
+                            self.create_relationship(entity1_name=entity1, relation_type='relation',
+                                                     entity2_name=f"{e2}", properties={'relation': rela['relation']})
+                            if knowledge != '':
+                                self.create_relationship(entity1_name=e2, relation_type='knowledge',
+                                                         entity2_name=knowledge)
+                    else:
+                        self.create_node(entity_name=entity2, entity_type='entity')
+                        self.create_relationship(entity1_name=entity1, relation_type='relation', entity2_name=entity2,
+                                                 properties={'relation': rela['relation']})
+                        if knowledge != '':
+                            self.create_relationship(entity1_name=entity2, relation_type='knowledge',
+                                                     entity2_name=knowledge)
+
+    def execute(self):
+        """执行主任务"""
+        self.process_data()
+        self.close()
+
+
 if __name__ == "__main__":
     # 读取 YAML 配置文件
     with open('../config/config.yaml', 'r') as file:
@@ -379,3 +525,11 @@ if __name__ == "__main__":
 
     graphNormalizer = GraphNormalizer(json_file_path=graph_dir)
     graphNormalizer.process_json_file()
+
+    uri = 'bolt://' + str(config['neo4j']['host']) + ':' + str(config['neo4j']['port'])
+    user = config['neo4j']['user']
+    password = config['neo4j']['password']
+
+    # 创建 Neo4j 知识图谱实例并执行
+    graph = Neo4jKnowledgeGraph(uri, user, password, graph_dir)
+    graph.execute()
