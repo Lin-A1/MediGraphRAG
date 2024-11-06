@@ -12,7 +12,7 @@ save:
   dir: save
 
 knowledge:
-  dir: data/knowledge/data.json
+  dir: data/knowledge/test.json
 
 graph:
   dir: graph/data.json

@@ -1,0 +1,467 @@
+[
+    {
+        "knowledge": "胃液分泌调节涉及多个时期：头期、胃期和肠期。头期内含有神经-体液双重机制，迷走神经通过Ach直接作用于壁细胞并促进胃泌素释放；胃期内存在长反射与短反射以及化学成分直接刺激G细胞释放胃泌素的途径；肠期内则有体液因素如肠泌酸素等发挥作用。各时期分泌量分别占30%、60%和10%，且三个时期的分泌并非顺序独立，而是部分重叠进行。",
+        "entities": [
+            {
+                "entity": "头期",
+                "type": "胃液分泌时期",
+                "description": "含有神经-体液双重机制"
+            },
+            {
+                "entity": "胃期",
+                "type": "胃液分泌时期",
+                "description": "存在长反射与短反射以及化学成分直接刺激G细胞释放胃泌素的途径"
+            },
+            {
+                "entity": "肠期",
+                "type": "胃液分泌时期",
+                "description": "有体液因素如肠泌酸素等发挥作用"
+            },
+            {
+                "entity": "迷走神经",
+                "type": "神经系统",
+                "description": "通过Ach直接作用于壁细胞并促进胃泌素释放"
+            },
+            {
+                "entity": "壁细胞",
+                "type": "细胞类型",
+                "description": "受迷走神经影响，促进胃泌素释放"
+            },
+            {
+                "entity": "胃泌素",
+                "type": "激素",
+                "description": "由壁细胞和G细胞分泌"
+            },
+            {
+                "entity": "长反射",
+                "type": "反射类型",
+                "description": "存在于胃期内，与短反射共同作用于G细胞"
+            },
+            {
+                "entity": "短反射",
+                "type": "反射类型",
+                "description": "存在于胃期内，与长反射共同作用于G细胞"
+            },
+            {
+                "entity": "G细胞",
+                "type": "细胞类型",
+                "description": "受化学成分直接刺激释放胃泌素"
+            }
+        ],
+        "relation": [
+            {
+                "entity1": "迷走神经",
+                "relation": "作用于",
+                "entity2": "壁细胞"
+            },
+            {
+                "entity1": "Ach",
+                "relation": "通过",
+                "entity2": "迷走神经"
+            },
+            {
+                "entity1": "胃泌素",
+                "relation": "由",
+                "entity2": "壁细胞分泌"
+            },
+            {
+                "entity1": "胃泌素",
+                "relation": "由",
+                "entity2": "G细胞分泌"
+            },
+            {
+                "entity1": "长反射",
+                "relation": "存在于",
+                "entity2": "胃期内"
+            },
+            {
+                "entity1": "短反射",
+                "relation": "存在于",
+                "entity2": "胃期内"
+            },
+            {
+                "entity1": "化学成分",
+                "relation": "直接刺激",
+                "entity2": "G细胞释放胃泌素"
+            }
+        ]
+    },
+    {
+        "knowledge": "盆腔脓肿是指在手术后由于感染引起盆腔内积聚脓液的情况，常见于腹部手术如溃疡病穿孔修补术后。症状包括发热、腹泻、里急后重、尿频、排尿困难等。诊断通常通过临床表现和影像学检查（如超声或CT）。治疗主要包括抗生素和支持疗法，必要时可能需要引流术。",
+        "entities": [
+            {
+                "entity": "盆腔脓肿",
+                "type": "疾病",
+                "description": "手术后感染引起的盆腔内积聚脓液的情况"
+            },
+            {
+                "entity": "腹部手术",
+                "type": "手术",
+                "description": "如溃疡病穿孔修补术后的并发症"
+            },
+            {
+                "entity": "发热",
+                "type": "症状",
+                "description": "高体温，常见于感染性疾病中"
+            },
+            {
+                "entity": "腹泻",
+                "type": "症状",
+                "description": "排便次数增多且粪便稀薄"
+            },
+            {
+                "entity": "里急后重",
+                "type": "症状",
+                "description": "肛门坠胀感，常伴有频繁的排便冲动但排出少量粪便"
+            },
+            {
+                "entity": "尿频",
+                "type": "症状",
+                "description": "频繁地感到需要排尿"
+            },
+            {
+                "entity": "排尿困难",
+                "type": "症状",
+                "description": "排尿时感觉不适或疼痛，可能伴有尿流变细、中断等现象"
+            },
+            {
+                "entity": "超声",
+                "type": "检查项目",
+                "description": "一种利用声波成像的诊断技术"
+            },
+            {
+                "entity": "CT",
+                "type": "检查项目",
+                "description": "计算机断层扫描，用于详细观察身体内部结构"
+            },
+            {
+                "entity": "抗生素",
+                "type": "药物",
+                "description": "治疗感染的常用药物"
+            },
+            {
+                "entity": "引流术",
+                "type": "治疗方法",
+                "description": "通过手术排出脓液以减轻症状和促进愈合"
+            }
+        ],
+        "relation": [
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "发热"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "腹泻"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "里急后重"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "尿频"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "排尿困难"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "治疗方法",
+                "entity2": "抗生素"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "治疗方法",
+                "entity2": "引流术"
+            },
+            {
+                "entity1": "超声",
+                "relation": "检查方法",
+                "entity2": "盆腔脓肿"
+            },
+            {
+                "entity1": "CT",
+                "relation": "检查方法",
+                "entity2": "盆腔脓肿"
+            }
+        ]
+    },
+    {
+        "knowledge": "急性造血停滞的特点包括突然出现的全血细胞减少、网织红细胞可降至零以及骨髓中可见巨大原红细胞。此病通常在无血液病的患者中发生，且其病程常呈自限性，在适当的支持治疗下可以自然恢复。",
+        "entities": [
+            {
+                "entity": "急性造血停滞",
+                "type": "疾病",
+                "description": "一种导致全血细胞减少、网织红细胞降至零以及骨髓中出现巨大原红细胞的病症"
+            },
+            {
+                "entity": "全血细胞减少",
+                "type": "症状",
+                "description": "血液中的多种血细胞数量突然下降"
+            },
+            {
+                "entity": "网织红细胞",
+                "type": "生理指标",
+                "description": "未完全成熟的红细胞，可降至零"
+            },
+            {
+                "entity": "骨髓中可见巨大原红细胞",
+                "type": "症状",
+                "description": "在骨髓中观察到的异常现象"
+            },
+            {
+                "entity": "无血液病患者",
+                "type": "人群",
+                "description": "未患有其他血液疾病的人群，该病症通常在此类人群中发生"
+            },
+            {
+                "entity": "自限性",
+                "type": "病情特征",
+                "description": "疾病的自然病程有限制，可以自行恢复"
+            },
+            {
+                "entity": "支持治疗",
+                "type": "治疗方法",
+                "description": "适当的辅助治疗方法，在此病症中帮助患者自然恢复"
+            }
+        ],
+        "relation": [
+            {
+                "entity1": "急性造血停滞",
+                "relation": "伴随症状",
+                "entity2": "全血细胞减少"
+            },
+            {
+                "entity1": "急性造血停滞",
+                "relation": "伴随症状",
+                "entity2": "网织红细胞降至零"
+            },
+            {
+                "entity1": "急性造血停滞",
+                "relation": "伴随症状",
+                "entity2": "骨髓中可见巨大原红细胞"
+            },
+            {
+                "entity1": "急性造血停滞",
+                "relation": "易感人群",
+                "entity2": "无血液病患者"
+            },
+            {
+                "entity1": "急性造血停滞",
+                "relation": "自然病程",
+                "entity2": "自限性"
+            },
+            {
+                "entity1": "急性造血停滞",
+                "relation": "治疗方法",
+                "entity2": "支持治疗"
+            }
+        ]
+    },
+    {
+        "knowledge": "盆腔脓肿是指在手术后由于感染引起盆腔内积聚脓液的情况，常见于腹部手术如溃疡病穿孔修补术后。症状包括发热、腹泻、里急后重、尿频、排尿困难等。诊断通常通过临床表现和影像学检查（如超声或CT）。治疗主要包括抗生素和支持疗法，必要时可能需要引流术。",
+        "entities": [
+            {
+                "entity": "盆腔脓肿",
+                "type": "疾病",
+                "description": "手术后感染引起的盆腔内积聚脓液的情况"
+            },
+            {
+                "entity": "腹部手术",
+                "type": "手术",
+                "description": "如溃疡病穿孔修补术等"
+            },
+            {
+                "entity": "发热",
+                "type": "症状",
+                "description": "体温升高，常见症状之一"
+            },
+            {
+                "entity": "腹泻",
+                "type": "症状",
+                "description": "排便次数增多且粪便稀薄"
+            },
+            {
+                "entity": "里急后重",
+                "type": "症状",
+                "description": "肛门坠胀感，频繁有便意但排出量少"
+            },
+            {
+                "entity": "尿频",
+                "type": "症状",
+                "description": "排尿次数增多"
+            },
+            {
+                "entity": "排尿困难",
+                "type": "症状",
+                "description": "排尿不畅或疼痛"
+            },
+            {
+                "entity": "超声",
+                "type": "检查项目",
+                "description": "一种影像学检查方法，用于诊断盆腔脓肿"
+            },
+            {
+                "entity": "CT",
+                "type": "检查项目",
+                "description": "计算机断层扫描，用于诊断盆腔脓肿"
+            },
+            {
+                "entity": "抗生素",
+                "type": "药物",
+                "description": "治疗感染的主要手段"
+            },
+            {
+                "entity": "引流术",
+                "type": "治疗方法",
+                "description": "必要时进行的手术，用于排出脓液"
+            }
+        ],
+        "relation": [
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "发热"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "腹泻"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "里急后重"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "尿频"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "伴随症状",
+                "entity2": "排尿困难"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "治疗方法",
+                "entity2": "抗生素"
+            },
+            {
+                "entity1": "盆腔脓肿",
+                "relation": "治疗方法",
+                "entity2": "引流术"
+            },
+            {
+                "entity1": "诊断",
+                "relation": "检查方法",
+                "entity2": "超声"
+            },
+            {
+                "entity1": "诊断",
+                "relation": "检查方法",
+                "entity2": "CT"
+            }
+        ]
+    },
+    {
+        "knowledge": "胃液分泌调节涉及多个时期：头期、胃期和肠期。头期内含有神经-体液双重机制，迷走神经通过Ach直接作用于壁细胞并促进胃泌素释放；胃期内存在长反射与短反射以及化学成分直接刺激G细胞释放胃泌素的途径；肠期内则有体液因素如肠泌酸素等发挥作用。各时期分泌量分别占30%、60%和10%，且三个时期的分泌并非顺序独立，而是部分重叠进行。",
+        "entities": [
+            {
+                "entity": "头期",
+                "type": "生理时期",
+                "description": "胃液分泌的第一个阶段"
+            },
+            {
+                "entity": "胃期",
+                "type": "生理时期",
+                "description": "胃液分泌的第二个阶段"
+            },
+            {
+                "entity": "肠期",
+                "type": "生理时期",
+                "description": "胃液分泌的第三个阶段"
+            },
+            {
+                "entity": "迷走神经",
+                "type": "神经系统",
+                "description": "参与头期内的胃泌素释放"
+            },
+            {
+                "entity": "Ach",
+                "type": "化学物质",
+                "description": "乙酰胆碱，通过迷走神经作用于壁细胞"
+            },
+            {
+                "entity": "壁细胞",
+                "type": "细胞类型",
+                "description": "胃黏膜中的细胞之一"
+            },
+            {
+                "entity": "胃泌素",
+                "type": "激素",
+                "description": "由G细胞释放的激素，促进胃液分泌"
+            },
+            {
+                "entity": "长反射",
+                "type": "生理机制",
+                "description": "胃期内的一种调节途径"
+            },
+            {
+                "entity": "短反射",
+                "type": "生理机制",
+                "description": "胃期内的另一种调节途径"
+            },
+            {
+                "entity": "G细胞",
+                "type": "细胞类型",
+                "description": "能够释放胃泌素的细胞"
+            },
+            {
+                "entity": "肠泌酸素",
+                "type": "体液因素",
+                "description": "参与肠期内的胃液分泌调节"
+            }
+        ],
+        "relation": [
+            {
+                "entity1": "迷走神经",
+                "relation": "作用于",
+                "entity2": "壁细胞"
+            },
+            {
+                "entity1": "Ach",
+                "relation": "通过",
+                "entity2": "迷走神经"
+            },
+            {
+                "entity1": "胃泌素",
+                "relation": "由",
+                "entity2": "G细胞释放"
+            },
+            {
+                "entity1": "长反射",
+                "relation": "存在于",
+                "entity2": "胃期内"
+            },
+            {
+                "entity1": "短反射",
+                "relation": "存在于",
+                "entity2": "胃期内"
+            },
+            {
+                "entity1": "肠泌酸素",
+                "relation": "参与",
+                "entity2": "肠期内的胃液分泌调节"
+            }
+        ]
+    }
+]
