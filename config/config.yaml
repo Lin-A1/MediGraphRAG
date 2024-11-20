@@ -16,3 +16,10 @@ knowledge:
 
 graph:
   dir: graph/data.json
+
+faiss:
+  faiss_index_path: data/faiss_index/faiss_index.index
+  metadata_path: data/faiss_index/matedata.npy
+
+embedding:
+  path: model/bge-large-zh-v1.5

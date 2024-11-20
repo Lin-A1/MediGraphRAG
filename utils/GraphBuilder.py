@@ -1,9 +1,10 @@
 import json
 import os
 import time
-import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import faiss
+import numpy as np
 import pandas as pd
 import yaml
 from langchain_community.llms import Ollama
@@ -11,6 +12,9 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from neo4j import GraphDatabase
 from tqdm import tqdm
+
+from Embedding import *
+from Neo4jEntityFetcher import Neo4jEntityFetcher
 
 warnings.filterwarnings("ignore")
 
@@ -506,6 +510,86 @@ class Neo4jKnowledgeGraph:
         self.close()
 
 
+class Neo4jFAISSIndexer:
+    def __init__(self, neo4j_uri, neo4j_user, neo4j_password, model, tokenizer, batch_size=32):
+        # Neo4j配置
+        self.uri = neo4j_uri
+        self.user = neo4j_user
+        self.password = neo4j_password
+
+        # 初始化Fetch对象
+        self.fetcher = Neo4jEntityFetcher(self.uri, self.user, self.password)
+
+        # Embedding模型
+        self.model = model
+        self.tokenizer = tokenizer
+
+        # 批量大小和保存路径
+        with open('../config/config.yaml', 'r') as file:
+            config = yaml.safe_load(file)
+
+        # 解析环境变量
+        base_dir = config['base']['dir']
+        faiss_index_path = os.path.join(base_dir, config['faiss']['faiss_index_path'])
+        metadata_path = os.path.join(base_dir, config['faiss']['metadata_path'])
+
+        self.batch_size = batch_size
+        self.faiss_index_path = faiss_index_path
+        self.metadata_path = metadata_path
+
+        # 加载实体数据
+        self.knowledge_entities = self._fetch_knowledge_entities()
+        self.texts = [i['properties']['name'] for i in self.knowledge_entities]
+        self.ids = [i['id'] for i in self.knowledge_entities]
+
+        # 计算文本嵌入
+        self.embeddings = self._generate_embeddings()
+
+    def _fetch_knowledge_entities(self):
+        """从Neo4j中获取知识实体"""
+        knowledge_entities = self.fetcher.get_entities_by_label("knowledge")
+        knowledge_entities.extend(self.fetcher.get_entities_by_label("entity"))
+        return knowledge_entities
+
+    def _generate_embeddings(self):
+        """生成文本的嵌入"""
+        embeddings = []
+        for i in tqdm(range(0, len(self.texts), self.batch_size), desc="generate embeddings"):
+            batch_texts = self.texts[i:i + self.batch_size]
+            batch_embeddings = encode_text(self.model, self.tokenizer, batch_texts)
+            embeddings.extend(batch_embeddings)
+        return np.array(embeddings, dtype=np.float32)
+
+    def create_faiss_index(self):
+        """创建FAISS索引"""
+        dim = self.embeddings.shape[1]  # 嵌入的维度
+        index = faiss.IndexFlatL2(dim)  # 使用L2距离度量
+        index.add(self.embeddings)  # 添加嵌入数据
+        faiss.write_index(index, self.faiss_index_path)  # 写入FAISS索引文件
+        np.save(self.metadata_path, self.ids)  # 保存对应的元数据
+        print(f"FAISS索引已保存到 {self.faiss_index_path}")
+        print(f"元数据已保存到 {self.metadata_path}")
+
+    def load_faiss_index(self):
+        """加载FAISS索引"""
+        self.index = faiss.read_index(self.faiss_index_path)
+        self.ids = np.load(self.metadata_path)
+        print(f"FAISS索引已加载，元数据加载完毕。")
+        return self.index, self.ids
+
+    def search(self, query, top_k=5):
+        """进行FAISS搜索"""
+        query_embedding = encode_text(self.model, self.tokenizer, [query])
+        query_embedding = np.array(query_embedding, dtype=np.float32)
+
+        # 使用FAISS进行查询
+        distances, indices = self.index.search(query_embedding, top_k)
+
+        # 获取相关的实体ID
+        results = [(self.ids[i], distances[0][idx]) for idx, i in enumerate(indices[0])]
+        return results
+
+
 if __name__ == "__main__":
     # 读取 YAML 配置文件
     with open('../config/config.yaml', 'r') as file:
@@ -533,3 +617,18 @@ if __name__ == "__main__":
     # 创建 Neo4j 知识图谱实例并执行
     graph = Neo4jKnowledgeGraph(uri, user, password, graph_dir)
     graph.execute()
+
+    # 初始化模型和分词器
+    model, tokenizer = LoadModel()
+
+    # 初始化Neo4jFAISSIndexer类
+    indexer = Neo4jFAISSIndexer(
+        neo4j_uri=uri,
+        neo4j_user=user,
+        neo4j_password=password,
+        model=model,
+        tokenizer=tokenizer
+    )
+
+    # 创建FAISS索引
+    indexer.create_faiss_index()

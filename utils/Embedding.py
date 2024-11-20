@@ -1,14 +1,21 @@
 import warnings
-
 warnings.filterwarnings("ignore")
 
+import yaml
+import os
 from transformers import AutoModel, AutoTokenizer
 import torch
 
 
 def LoadModel(model_path='../../model/bge-large-zh-v1.5'):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    with open('../config/config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
 
+    # 解析环境变量
+    base_dir = config['base']['dir']
+    model_path = os.path.join(base_dir, config['embedding']['path'])
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = AutoModel.from_pretrained(model_path).to(device)
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 

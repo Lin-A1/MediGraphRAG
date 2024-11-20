@@ -1,12 +1,8 @@
-from langchain.vectorstores import FAISS
-from langchain.docstore.document import Document
-from Neo4jEntityFetcher import Neo4jEntityFetcher
-from Embedding import *
-from tqdm import tqdm
-from langchain.vectorstores import FAISS
 import faiss
 import numpy as np
 
+from Embedding import *
+from Neo4jEntityFetcher import Neo4jEntityFetcher
 
 uri = "bolt://localhost:7687"  # Neo4j 数据库地址
 user = "neo4j"  # Neo4j 用户名
