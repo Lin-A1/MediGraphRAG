@@ -62,15 +62,11 @@ cd MediGraphRAG
 conda activate med
 
 # 创建neo4j知识图谱
-cd data
-python Neo4jBuilder.py
+cd dautilsta
+python GraphBuilder.py
 
-# 构建faiss索引
-cd ../rag
-python IndexBuild.py
-
-# 进行实体生成（可以修改相关参数，如query_text、k以及任务模型的temperature等）
-python ragWorkflow.py
+# 进行检索生成
+python generate.py
 ```
 
 ## 知识库构建
