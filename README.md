@@ -50,6 +50,7 @@ pip install -r requirements.txt
 - `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
 - `嵌入模型`： https://huggingface.co/BAAI/bge-large-zh-v1.5 -> [model/bge-large-zh-v1.5]
 
+
 ## 快速开始
 ```bash
 # 先构建好上面所描述环境
@@ -73,6 +74,7 @@ python IndexBuild.py
 python ragWorkflow.py
 ```
 
+构建流程可见[process.md](docx/process.md)
 
 ---
 
@@ -103,7 +105,6 @@ python ragWorkflow.py
 #### 4. **RAG工作流**
 在[ragWorkflow.py](process/rag/ragWorkflow.py)中，输入关键词，利用FAISS索引进行实体匹配，提取相关知识点，生成医学试题。
 
-![rag.png](docx/images/rag.png)
 
 ---
 
