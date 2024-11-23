@@ -13,3 +13,5 @@ faiss-gpu
 yaml
 pyyaml
 numpy
+
+metagpt

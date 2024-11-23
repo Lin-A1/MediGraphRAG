@@ -149,12 +149,15 @@ if __name__ == "__main__":
     fetcher = MedicalKnowledgeFetcher()
 
     # 查询糖尿病相关知识
-    knowledges = fetcher.query_knowledge("糖尿病")
+    knowledges = fetcher.query_knowledge("尿毒症")
+
+    knowlist = []
 
     # 生成知识描述并基于描述生成选择题
     for knowledge in knowledges:
         knowledge_description = fetcher.describe_knowledge(knowledge)
+        knowlist.append(knowledge_description)
         print("生成的知识描述:", knowledge_description)
 
-        question = fetcher.generate_multiple_choice_question(knowledge_description)
-        print("生成的选择题:", question)
+    question = fetcher.generate_multiple_choice_question(knowlist)
+    print("生成的选择题:", question)

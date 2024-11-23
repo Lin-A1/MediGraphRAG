@@ -73,10 +73,10 @@ python IndexBuild.py
 python ragWorkflow.py
 ```
 
-## 知识图谱构建
+## 知识库构建
 
 - **[dataProcess.ipynb](process/data/dataProcess.ipynb)**
-
+![rag](data/create.png)
 ### 知识图谱构建
 
 #### 1. 知识点抽取
@@ -204,6 +204,8 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 ### RAG
 
 - **[ragProcess.ipynb](process/rag/ragProcess.ipynb)**
+![rag](data/rag.png)
+
 
 #### 1. 嵌入模型
 
@@ -309,6 +311,9 @@ Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格
 
 
 目前我们选用的基模型为`qwen2.5`,后续我们可以考虑更换将任务模型的基模型更换为医学大模型
+
+### Agent
+使用框架metagpt构建，未完待续。。。
 
 ## 后续任务
 
