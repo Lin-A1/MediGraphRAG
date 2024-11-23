@@ -94,7 +94,7 @@ python ragWorkflow.py
 ### RAG流程
 
 #### 1. **嵌入模型**
-使用`bge-large-zh-v1.5`进行实体和知识点编码，后续可替换为医学领域专用的嵌入模型。
+使用`bge-large-zh-v1.5`进行实体和知识点编码
 
 #### 2. **Neo4j数据提取**
 使用[Neo4jEntityFetcher.py](process/rag/Neo4jEntityFetcher.py)从Neo4j提取实体，提供基于属性、标签等条件的查询接口。
