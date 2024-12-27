@@ -6,7 +6,7 @@ from agent.questionGenerator import questionGenerator
 from utils.generate import MedicalKnowledgeFetcher
 
 
-keyword = "肺结节"
+keyword = "肾上腺素暴涨"
 fetcher = MedicalKnowledgeFetcher()
 # 查询糖尿病相关知识
 knowledges = fetcher.query_knowledge(keyword)
@@ -35,4 +35,3 @@ async def main(
 
 if __name__ == "__main__":
     msg = fire.Fire(main)
-
