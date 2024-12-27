@@ -599,7 +599,7 @@ if __name__ == "__main__":
     base_dir = config['base']['dir']
     save_dir = os.path.join(base_dir, config['save']['dir'])
     knowledge_dir = os.path.join(base_dir, config['knowledge']['dir'])
-    graph_dir = os.path.join(save_dir, config['graph']['dir'])
+    graph_dir = os.path.join(base_dir, config['graph']['dir'])
 
     processor = GraphBuilder(
         knowledge_file=knowledge_dir,

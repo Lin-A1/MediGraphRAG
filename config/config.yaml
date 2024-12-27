@@ -12,10 +12,10 @@ save:
   dir: save
 
 knowledge:
-  dir: data/knowledge/test.json
+  dir: data/knowledge/knowledge.json
 
 graph:
-  dir: graph/data.json
+  dir: data/graph/graph.json
 
 faiss:
   faiss_index_path: data/faiss_index/faiss_index.index

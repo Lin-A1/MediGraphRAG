@@ -5,12 +5,12 @@ import yaml
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from Embedding import LoadModel, encode_text
-from Neo4jEntityFetcher import Neo4jEntityFetcher
+from .Embedding import LoadModel, encode_text
+from .Neo4jEntityFetcher import Neo4jEntityFetcher
 
 
 class MedicalKnowledgeFetcher:
-    def __init__(self, config_path='../config/config.yaml', faiss_index_path=None, metadata_path=None,
+    def __init__(self, config_path='config/config.yaml', faiss_index_path=None, metadata_path=None,
                  neo4j_uri="bolt://localhost:7687", neo4j_user="neo4j", neo4j_password="password"):
         # 加载配置文件
         with open(config_path, 'r') as file:

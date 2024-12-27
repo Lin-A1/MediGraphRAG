@@ -8,7 +8,7 @@ import torch
 
 
 def LoadModel(model_path='../../model/bge-large-zh-v1.5'):
-    with open('../config/config.yaml', 'r') as file:
+    with open('config/config.yaml', 'r') as file:
         config = yaml.safe_load(file)
 
     # 解析环境变量
