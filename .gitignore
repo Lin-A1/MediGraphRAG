@@ -11,3 +11,6 @@ data/medical-books
 metagpt
 workspace
 logs
+agent/metagpt
+agent/workspace
+agent/logs
