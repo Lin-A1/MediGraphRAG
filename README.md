@@ -122,6 +122,9 @@ python generate.py
 }
 ```
 
+## Agent
+
+在上述数据准备的基础上，我们使用`metagpt`构建试题，启动脚本为[main.py](main.py),相关agent配置位于[agent](agent),其他脚本位于[utils](utils)
 
 
 
