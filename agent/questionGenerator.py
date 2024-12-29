@@ -1,6 +1,6 @@
 import random
 import re
-
+import json
 from metagpt.actions import Action
 from metagpt.logs import logger
 from metagpt.roles import Role
@@ -14,6 +14,32 @@ def parse_json(rsp):
     match = re.search(pattern, rsp, re.DOTALL)
     json = match.group(1) if match else rsp
     return json
+
+
+def write_json_to_file(data, file_path):
+    """将JSON格式的数据作为数组元素追加到文件"""
+    try:
+        # 先读取现有内容，如果文件为空则创建空数组
+        try:
+            with open(file_path, 'r+', encoding='utf-8') as f:
+                try:
+                    content = json.load(f)  # 尝试读取现有的JSON数据
+                    if not isinstance(content, list):
+                        raise ValueError("文件内容不是一个合法的JSON数组")
+                except json.JSONDecodeError:
+                    content = []  # 如果文件为空或格式不正确，创建一个空数组
+        except FileNotFoundError:
+            content = []
+
+        # 添加新的数据
+        content.append(data)
+
+        # 将更新后的数组写回文件
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(content, f, ensure_ascii=False, indent=4)
+
+    except Exception as e:
+        logger.info(f"写入出错")
 
 
 class questionGeneration(Action):
@@ -124,6 +150,11 @@ class questionGeneration(Action):
         prompt = self.PROMPT_TEMPLATE.format(knowledge_description=knowledge_description[-1], qtype=qtype, case=case)
         rsp = await self._aask(prompt)
         text = parse_json(rsp)
+        try:
+            text_dict = json.loads(text)
+            write_json_to_file(text_dict, "questionGeneration.json")
+        except json.JSONDecodeError:
+            logger.info(f"输出格式错误")
         return text
 
 
