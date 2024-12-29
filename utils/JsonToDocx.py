@@ -31,10 +31,10 @@ def create_docx(questions, filename):
     doc.save(filename)
 
 
-with open('../questionGeneration.json', 'r', encoding='utf-8') as f:
+with open('../save/questionGeneration.json', 'r', encoding='utf-8') as f:
     questions = json.load(f)
 
 # 生成 Word 文档
-output_filename = "../医学问题与解析.docx"
+output_filename = "../save/医学问题与解析.docx"
 create_docx(questions, output_filename)
 print(f"文档已保存为 {output_filename}")

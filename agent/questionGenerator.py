@@ -152,7 +152,7 @@ class questionGeneration(Action):
         text = parse_json(rsp)
         try:
             text_dict = json.loads(text)
-            write_json_to_file(text_dict, "questionGeneration.json")
+            write_json_to_file(text_dict, "save/questionGeneration.json")
         except json.JSONDecodeError:
             logger.info(f"输出格式错误")
         return text
