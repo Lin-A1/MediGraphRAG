@@ -1,3 +1,4 @@
+import time
 import fire
 from metagpt.logs import logger
 from metagpt.team import Team
@@ -160,9 +161,22 @@ def fetch_knowledge_for_keywords(keywords):
     return all_knowledges
 
 
+def calculate_time(func):
+    """装饰器：计算异步函数执行时间"""
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()  # 获取开始时间
+        result = await func(*args, **kwargs)  # 等待异步函数执行
+        end_time = time.time()  # 获取结束时间
+        execution_time = end_time - start_time  # 计算花费的时间
+        print(f"异步函数 {func.__name__} 执行时间: {execution_time:.6f} 秒")
+        return result
+    return wrapper
+
+
+@calculate_time
 async def main(
-        investment: float = 100.0,
-        n_round: int = 10,
+        investment: float = 1000.0,
+        n_round: int = 20,
 ):
     # 批量获取知识
     all_knowledges = fetch_knowledge_for_keywords(keywords)
@@ -187,4 +201,3 @@ async def main(
 
 if __name__ == "__main__":
     msg = fire.Fire(main)
-
