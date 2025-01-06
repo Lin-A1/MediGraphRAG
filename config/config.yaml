@@ -9,7 +9,7 @@ base:
   dir: /home/lin/work/code/DeepLearning/LLM/Medical
 
 save:
-  dir: save
+  dir: data
 
 knowledge:
   dir: data/knowledge/knowledge.json

@@ -51,7 +51,11 @@ class MedicalKnowledgeFetcher:
         knowledge += entity[0]['properties']['name'] + '\n\n'
         if entity[0]['labels'][0] == 'entity':
             ent = self.fetcher.get_entities_by_entities_id(entity[0]['id'])
-            type, description, key, know, relation = '', '', '', [], []
+            if len(ent) > 0:
+                key = ent[0]['key']
+            else:
+                key = ''
+            type, description, know, relation = '', '', [], []
             for e in ent:
                 if e['relationship']['type'] == 'type' and type == '':
                     type = e['properties']
@@ -61,7 +65,7 @@ class MedicalKnowledgeFetcher:
                     know.append(e['properties'])
                 if e['relationship']['type'] == 'relation':
                     relation.append((e['key'], e['relationship']['properties']['relation'], e['properties']))
-            knowledge += f'{key, type, description},\n相关知识点：{know},\n相关实体：{relation}'
+            knowledge += f'\n{key, type, description},\n相关知识点：{know},\n相关实体：{relation}\n'
 
         if entity[0]['labels'][0] == 'knowledge':
             entities = self.fetcher.get_entities_by_knowledge_id(entity[0]['id'])
@@ -76,7 +80,6 @@ class MedicalKnowledgeFetcher:
                     if e['relationship']['type'] == 'description' and description == '':
                         description = e['properties']
                 knowledge += f'{(key, description, type)}'
-
         return knowledge
 
     def describe_knowledge(self, knowledge):
