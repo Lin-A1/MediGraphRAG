@@ -1,7 +1,7 @@
  # MediGraphRAG
 
 ------
-![cover](images/cover.png)
+![cover](https://github.com/Lin-A1/MediGraphRAG/blob/main/docx/images/cover.png?raw=true)
 
 MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（Retrieval-Augmented Generation）方法，应用于医学试题的生成，提升医学领域的信息管理与应用效率。项目通过知识点抽取、关系提取和知识融合，解决大模型在生成过程中可能出现的幻觉问题，确保模型生成内容的准确性和可靠性。最终目标是为医学教育和实践提供一个动态、准确的知识支持系统。
 
@@ -72,7 +72,7 @@ python generate.py
 ## 知识库构建
 
 - **[dataProcess.ipynb](../process/data/dataProcess.ipynb)**
-![rag](images/create.png)
+![rag](https://github.com/Lin-A1/MediGraphRAG/blob/main/docx/images/create.png?raw=true)
 ### 知识图谱构建
 
 #### 1. 知识点抽取
@@ -193,14 +193,14 @@ python generate.py
 
 Neo4j作为一个图数据库，具有更好的图谱检索能力以及更严格的格式要求
 
-![graph](images/graph.png)
+![graph](https://github.com/Lin-A1/MediGraphRAG/blob/main/docx/images/graph.png?raw=true)
 
 我们以`relation`、`entity`、`description`、`type`为实体(由于不同知识点下同一个实体的描述的方面不一致，故我们构建多个描述实体以获取更为全面的描述),构建实体知识指向和实体属性关系，以便后续进行知识检索
 
 ### RAG
 
 - **[ragProcess.ipynb](../process/rag/ragProcess.ipynb)**
-![rag](images/rag.png)
+![rag](https://github.com/Lin-A1/MediGraphRAG/blob/main/docx/images/rag.png?raw=true)
 
 
 #### 1. 嵌入模型
