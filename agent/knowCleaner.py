@@ -1,9 +1,7 @@
 import re
 
 from metagpt.actions import Action, UserRequirement
-from metagpt.logs import logger
 from metagpt.roles import Role
-from metagpt.schema import Message
 
 
 def parse_json(rsp):
@@ -23,6 +21,7 @@ class knowClean(Action):
            - 清洗后的医学数据，标准化的实体及描述。确保实体名称一致、术语精确，去除冗余和无关信息。
         
         2. **知识点提取与扩展**：
+           - 请基于你你的医学知识背景进行诊断生成
            - 从输入的医学实体信息中提取并构建有意义的**知识点**。这些知识点可以包括病因、症状、治疗方法、并发症等领域。
            - 利用相关实体中的**三元知识图谱**信息（例如：`(实体1, 关系, 实体2)`）来补充和完善已有的知识点，或是从中生成新的知识点。
              - 例如，从已知的三元关系`('肺炎链球菌', '导致症状', '铁锈色痰')`可以推导出新的知识点：“肺炎链球菌引起的肺炎常伴有铁锈色痰”。
@@ -48,6 +47,7 @@ class knowClean(Action):
         5. **输出结果**：
             - 提取清晰且有意义的医学知识点，确保这些知识点与相关医学实体（如病因、症状、治疗等）之间的关系正确，并且通过三元知识图谱信息得到了适当的扩展和补充。
             - 输出的结果应当结构化、准确，能够方便后续医学分析、推理或决策支持。
+            - 请严格按照示例输出格式进行输出
     """
 
     name: str = "knowClean"
