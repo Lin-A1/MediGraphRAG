@@ -1,6 +1,8 @@
+import json
 import random
 import re
-import json
+
+from langchain.llms import Ollama
 from metagpt.actions import Action
 from metagpt.logs import logger
 from metagpt.roles import Role
@@ -50,18 +52,17 @@ class questionGeneration(Action):
 
         - 我发给你的内容是相关需要生成的试题的知识点
         - 你需要确保你给的题目具有逻辑性且有唯一正确答案
-        - 基于知识库进行试题的生成
-        - 试题考察尽量不要过于简单
-        - 你需要返回题目、选项、答案、解析
+        - 基于知识库内容或部分内容进行试题的生成
+        - 试题考察尽量不要过于简单，需要有一定难度，题目不应该过于简单，比如能在题干中直接看出答案。
+        - 你需要返回题目、选项、答案、解析，其中选项必须为ABCD四个选项
         - 确保输出是紧凑格式的有效JSON格式，不包含任何其他解释、转义符、换行符或反斜杠
-        - 请确保生成的试题的专业性，确保语言的逻辑能力与问题提问方式的合理性
-        - 请根据你的医学知识进行分析，确保题目生成的正确性
+        - 请确保生成的试题的专业性，确保语言的逻辑能力与问题提问方式的合理性以及题目生成的正确性
         - 按照题目题型特点生产试题，特点为：{qtype}
 
         **知识库内容:**
         {knowledge_description}
 
-        **输出案例（仅提供格式输出，不提供知识点参考，禁止完全仿照相同格式进行试题生成）：**
+        **输出案例（仅提供格式输出和题型格式，不提供知识点参考，可以简单借鉴出题目方式但禁止完全仿照相同格式进行试题生成）：**
 
         {case}
 
@@ -339,7 +340,7 @@ class questionGeneration(Action):
             },
             {
                 "名称": "题干分析题",
-                "特点": "给定一个医学场景或背景，要求考生基于题干内容提出多个问题，考察其推理、分析与综合能力。同时通过在题干描述中加入与诊断不完全相关的症状和检查结果，考察考生从混杂信息中筛选关键信息、排除干扰项并作出正确诊断的能力。注意一般只进行病状的描述，而不是直接说明其的病名，如‘肌无力一般不会直接描述，多数时候表述是眼睑下垂四肢乏力’",
+                "特点": "给定一个医学场景或背景，要求考生基于题干内容提出**多个问题**，考察其推理、分析与综合能力。同时通过在题干描述中加入与诊断不完全相关的症状和检查结果，考察考生从混杂信息中筛选关键信息、排除干扰项并作出正确诊断的能力。注意一般只进行病状的描述，而不是直接说明其的病名，如‘肌无力一般不会直接描述，多数时候表述是眼睑下垂四肢乏力’",
                 "输出案例": [
                     {
                         "topic": "一名65岁男性患者，长期吸烟，近半年有持续咳嗽、咳痰，偶有气短，体检时发觉右侧胸部有哑音，胸片显示右肺上叶局部阴影。以下是该患者可能的诊断问题：",
@@ -498,19 +499,71 @@ class questionGeneration(Action):
 
         ]
         # knowledge_description = parse_json(knowledge_description)
+        # q = random.choice(qtype)
+        # qtype = q['名称'] + ':' + q['特点']
+        # case = random.choice(q['输出案例'])
+        # prompt = self.PROMPT_TEMPLATE.format(knowledge_description=knowledge_description[-1], qtype=qtype, case=case)
+        # rsp = await self._aask(prompt)
+        # text = parse_json(rsp)
+        # try:
+        #     text_dict = json.loads(text)
+        #     write_json_to_file(text_dict, "save/questionGeneration.json")
+        # except json.JSONDecodeError:
+        #     logger.info(f"输出格式错误")
+        # return text
+
+        # 初始化 Ollama 模型
+        llm = Ollama(model="qwen2.5:32b")
+
+        # 定义用于模型判断的 Prompt
+        judge_prompt = """
+        你是一个医学考试题目生成专家。请判断以下题目是否符合以下规则：
+        1. 题目不应该过于简单，比如能在题干中直接看出答案。
+        2. 题目需要大致符合题型特点。
+        3. 题目质量需要有一定保障
+    
+        若非题目符合规则，请返回True，若出现较大明显问题，返回False,尽量放宽规则
+
+        题目：{full_question}
+        
+        返回示例：
+        ```True/False```
+        """
+
+        def check_generated_result(full_question):
+            prompt = judge_prompt.format(
+                full_question=full_question
+            )
+            response = llm(prompt)
+            if "True" in response:
+                return True
+            else:
+                logger.info(f'\n{response}\n')
+                return False
+
+        # 生成的题目
         q = random.choice(qtype)
         qtype = q['名称'] + ':' + q['特点']
         case = random.choice(q['输出案例'])
         prompt = self.PROMPT_TEMPLATE.format(knowledge_description=knowledge_description[-1], qtype=qtype, case=case)
         rsp = await self._aask(prompt)
         text = parse_json(rsp)
+
         try:
             text_dict = json.loads(text)
-            write_json_to_file(text_dict, "save/questionGeneration.json")
+            # 将整个问题作为一个整体
+            full_question = qtype+'\n'+str(json.loads(text))
+
+            # 判断是否符合要求
+            is_valid = check_generated_result(full_question)
+
+            if is_valid:
+                write_json_to_file(text_dict, "save/questionGeneration.json")
+            else:
+                logger.info(f"生成的题目不符合要求，未保存")
         except json.JSONDecodeError:
             logger.info(f"输出格式错误")
         return text
-
 
 class questionGenerator(Role):
     name: str = "Question generator"
