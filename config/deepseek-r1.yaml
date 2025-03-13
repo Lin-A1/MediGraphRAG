@@ -4,9 +4,5 @@
 llm:
   api_type: 'ollama'
   base_url: 'http://127.0.0.1:11434/api'
-  model: 'qwen2.5:32b'
+  model: 'deepseek-r1:32b'
 
-#llm:
-#  api_type: 'zhipuai'
-#  api_key: '28f77c720c8367417dde789021b3dd1e.Yhr1Ds5wAY5acI4R'
-#  model: 'glm-4-plus'

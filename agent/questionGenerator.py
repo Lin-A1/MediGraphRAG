@@ -1,13 +1,14 @@
 import json
 import random
 import re
+import os
 
 from langchain.llms import Ollama
 from metagpt.actions import Action
 from metagpt.logs import logger
 from metagpt.roles import Role
 from metagpt.schema import Message
-
+from metagpt.config2 import Config
 from .knowCleaner import knowClean
 
 
@@ -45,6 +46,20 @@ def write_json_to_file(data, file_path):
 
 
 class questionGeneration(Action):
+    def __init__(self, config=None, context=None):
+        if config is None:
+            # 获取当前文件的绝对路径
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            # 构建上级目录中 config 文件夹下的 deepseek-r1.yaml 的绝对路径
+            config_path = os.path.join(current_dir, "../config/deepseek-r1.yaml")
+            # 将路径标准化为绝对路径
+            config_path = os.path.abspath(config_path)
+            # 使用绝对路径加载配置
+            config = Config.from_home(config_path)
+
+        # 调用父类构造函数
+        super().__init__(config=config, context=context)
+
     PROMPT_TEMPLATE: str = """
         你是医学领域的专业大学教授，现在需要你根据我传递给你的知识库内容构建一道选择题，以考察考生的专业能力
 
@@ -543,7 +558,7 @@ class questionGeneration(Action):
 
         # 生成的题目
         q = random.choice(qtype)
-        qtype = q['名称'] + ':' + q['特点']
+        qtype = '实体类型' + '-' + q['名称'] + ':' + q['特点']
         case = random.choice(q['输出案例'])
         prompt = self.PROMPT_TEMPLATE.format(knowledge_description=knowledge_description[-1], qtype=qtype, case=case)
         rsp = await self._aask(prompt)

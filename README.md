@@ -50,7 +50,6 @@ pip install -r requirements.txt
 - `可信数据`->`医疗书籍`：https://github.com/scienceasdf/medical-books -> [data/medical-books]
 - `嵌入模型`： https://huggingface.co/BAAI/bge-large-zh-v1.5 -> [model/bge-large-zh-v1.5]
 
-
 ## 快速开始
 ```bash
 # 先构建好上面所描述环境
@@ -72,6 +71,12 @@ python generate.py
 
 构建流程可见[process.md](docx/process.md)
 
+## 更新
+```text
+2025.03.13:
+- 使用fastapi将检索流程封装为接口：bash api/run.sh
+- 生成器与解释器使用模型拆解，分别使用deepseek-r1:32b与qwen2.5:32b
+```
 ---
 
 ### 知识库构建
