@@ -5,6 +5,7 @@ data/faiss_index/faiss_index.index
 data/faiss_index/matedata.npy
 data/vector.txt
 model/bge-large-zh-v1.5/pytorch_model.bin
+model/bge-reranker-v2-m3/model.safetensors
 data/knowledge/knowledge-Copy1.json
 data/graph/graph-Copy1.json
 data/medical-books
