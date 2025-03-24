@@ -528,7 +528,7 @@ class questionGeneration(Action):
         # return text
 
         # 初始化 Ollama 模型
-        llm = Ollama(model="qwen2.5:32b")
+        llm = Ollama(model="qwen2.5:14b")
 
         # 定义用于模型判断的 Prompt
         judge_prompt = """
@@ -537,7 +537,7 @@ class questionGeneration(Action):
         2. 题目需要大致符合题型特点。
         3. 题目质量需要有一定保障
     
-        若非题目符合规则，请返回True，若出现较大明显问题，返回False,尽量放宽规则
+        若非题目符合规则，请返回True，若出现较大明显问题，返回False,尽量放宽规则，若题干中直接出现答案的题目必须返回False
 
         题目：{full_question}
         
@@ -574,6 +574,7 @@ class questionGeneration(Action):
 
             if is_valid:
                 write_json_to_file(text_dict, "save/questionGeneration.json")
+                logger.info(f"生成的题目符合要求，已保存")
             else:
                 logger.info(f"生成的题目不符合要求，未保存")
         except json.JSONDecodeError:

@@ -284,18 +284,12 @@ keywords = [
 
 fetcher = MedicalKnowledgeFetcher()
 
-
-# 查询每个关键词的相关知识
-def fetch_knowledge_for_keywords(keywords):
-    all_knowledges = {}
-    for keyword in keywords:
-        knowledges = fetcher.query_knowledge(keyword)
-        all_knowledges[keyword] = keyword + '\n'.join(knowledges)
-    return all_knowledges
+fetcher = MedicalKnowledgeFetcher()
 
 
 def calculate_time(func):
     """装饰器：计算异步函数执行时间"""
+
     async def wrapper(*args, **kwargs):
         start_time = time.time()  # 获取开始时间
         result = await func(*args, **kwargs)  # 等待异步函数执行
@@ -303,6 +297,7 @@ def calculate_time(func):
         execution_time = end_time - start_time  # 计算花费的时间
         print(f"异步函数 {func.__name__} 执行时间: {execution_time:.6f} 秒")
         return result
+
     return wrapper
 
 
@@ -311,26 +306,31 @@ async def main(
         investment: float = 1000.0,
         n_round: int = 20,
 ):
-    # 批量获取知识
-    all_knowledges = fetch_knowledge_for_keywords(keywords)
+    # 初始化团队
+    team = Team()
+    team.hire(
+        [
+            knowCleaner(),
+            questionGenerator(),
+        ]
+    )
+    team.invest(investment=investment)
 
-    # 依次处理每个关键词的知识
-    for keyword, idea in all_knowledges.items():
+    # 遍历关键词并逐一处理
+    for keyword in keywords:
+        logger.info(f"Fetching knowledge for keyword: {keyword}")
+
+        # 获取当前关键词的相关知识
+        knowledges = fetcher.query_knowledge(keyword)
+        idea = keyword + '\n'.join(knowledges)
+
         logger.info(f"Processing knowledge for keyword: {keyword}")
         logger.info(idea)
 
-        team = Team()
-        team.hire(
-            [
-                knowCleaner(),
-                questionGenerator(),
-            ]
-        )
-
-        team.invest(investment=investment)
+        # 运行项目
         team.run_project(idea)
         await team.run(n_round=n_round)
 
 
 if __name__ == "__main__":
-    msg = fire.Fire(main)
+    fire.Fire(main)

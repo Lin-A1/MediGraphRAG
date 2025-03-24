@@ -6,6 +6,7 @@ tqdm
 
 gensim
 transformers
+FlagEmbedding
 
 redis
 neo4j

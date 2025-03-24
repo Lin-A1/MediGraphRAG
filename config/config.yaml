@@ -23,3 +23,6 @@ faiss:
 
 embedding:
   path: model/bge-large-zh-v1.5
+
+rerank:
+  path: model/bge-reranker-v2-m3

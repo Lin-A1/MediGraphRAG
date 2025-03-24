@@ -4,5 +4,5 @@
 llm:
   api_type: 'ollama'
   base_url: 'http://127.0.0.1:11434/api'
-  model: 'deepseek-r1:32b'
+  model: 'deepseek-r1:14b'
 

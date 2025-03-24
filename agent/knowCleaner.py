@@ -14,7 +14,7 @@ def parse_json(rsp):
 class knowClean(Action):
     PROMPT_TEMPLATE: str = """
         数据：{knowledge}
-        你是一个医学知识处理系统，任务是从给定的医学数据中提取和构建结构化的知识点，并通过相关实体中的三元知识图谱信息去完善和补充知识点。请按照以下要求进行处理：
+        你是一个医学知识处理系统，任务是从给定的医学数据中提取和构建结构化的知识点，并通过相关实体中的三元知识图谱信息去完善和补充，并总结全部知识点。请按照以下要求进行处理：
         
         1. **数据清洗与标准化**：
            - 输入：包含医学实体（如疾病、症状、治疗、病因等）及其相关描述的原始数据。
@@ -47,6 +47,7 @@ class knowClean(Action):
         5. **输出结果**：
             - 提取清晰且有意义的医学知识点，确保这些知识点与相关医学实体（如病因、症状、治疗等）之间的关系正确，并且通过三元知识图谱信息得到了适当的扩展和补充。
             - 输出的结果应当结构化、准确，能够方便后续医学分析、推理或决策支持。
+            - 请输出全部已知的知识点
             - 请严格按照示例输出格式进行输出
     """
 
@@ -57,7 +58,6 @@ class knowClean(Action):
         rsp = await self._aask(prompt)
         text = parse_json(rsp)
         return text
-
 class knowCleaner(Role):
     name: str = "Knowledge cleaner"
     profile: str = "进行图谱提取数据的清洗与增强"

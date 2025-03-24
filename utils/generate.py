@@ -5,6 +5,7 @@ import yaml
 from langchain_community.llms import Ollama
 from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+from .Rerank import Reranker
 from .Embedding import LoadModel, encode_text
 from .Neo4jEntityFetcher import Neo4jEntityFetcher
 
@@ -36,7 +37,7 @@ class MedicalKnowledgeFetcher:
         query_vector = encode_text(self.model, self.tokenizer, query_text)
 
         # 执行FAISS查询
-        D, I = self.loaded_index.search(np.array(query_vector, dtype=np.float32), k=top_k)
+        D, I = self.loaded_index.search(np.array(query_vector, dtype=np.float32), k=30)
 
         knowledges = []
         for i in I[0]:
@@ -44,7 +45,10 @@ class MedicalKnowledgeFetcher:
             entity = self.fetcher.get_entity_by_id(entity_id)
             knowledge = self._extract_entity_knowledge(entity)
             knowledges.append(knowledge)
-        return knowledges
+        reranker = Reranker()
+        knowledges = reranker.rerank(query_text, knowledges, top_k)
+        knowledges = [item[0] for item in knowledges]
+        return knowledges[::-1]
 
     def _extract_entity_knowledge(self, entity):
         knowledge = ''
