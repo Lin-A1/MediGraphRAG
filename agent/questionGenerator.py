@@ -558,7 +558,7 @@ class questionGeneration(Action):
 
         # 生成的题目
         q = random.choice(qtype)
-        qtype = '实体类型' + '-' + q['名称'] + ':' + q['特点']
+        qtype = '试题类型' + '-' + q['名称'] + '-特点：' + q['特点']
         case = random.choice(q['输出案例'])
         prompt = self.PROMPT_TEMPLATE.format(knowledge_description=knowledge_description[-1], qtype=qtype, case=case)
         rsp = await self._aask(prompt)
