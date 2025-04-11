@@ -284,9 +284,6 @@ keywords = [
 
 fetcher = MedicalKnowledgeFetcher()
 
-fetcher = MedicalKnowledgeFetcher()
-
-
 def calculate_time(func):
     """装饰器：计算异步函数执行时间"""
 
