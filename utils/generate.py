@@ -27,6 +27,10 @@ class MedicalKnowledgeFetcher:
         self.loaded_index = faiss.read_index(self.faiss_index_path)
         self.loaded_ids = np.load(self.metadata_path)
 
+        neo4j_uri = 'bolt://' + str(self.config['neo4j']['host']) + ':' + str(self.config['neo4j']['port'])
+        neo4j_user = self.config['neo4j']['user']
+        neo4j_password = self.config['neo4j']['password']
+
         # 初始化Neo4j连接
         self.fetcher = Neo4jEntityFetcher(uri=neo4j_uri, user=neo4j_user, password=neo4j_password)
 

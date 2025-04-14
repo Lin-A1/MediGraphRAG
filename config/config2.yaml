@@ -10,3 +10,8 @@ llm:
 #  api_type: 'zhipuai'
 #  api_key: '28f77c720c8367417dde789021b3dd1e.Yhr1Ds5wAY5acI4R'
 #  model: 'glm-4-plus'
+
+#llm:
+#  api_type: 'dashscope'
+#  api_key: 'sk-0510de2c979d43ec8c7997b55cb00edb'
+#  model: 'qwen-max'

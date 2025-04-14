@@ -301,7 +301,7 @@ def calculate_time(func):
 @calculate_time
 async def main(
         investment: float = 1000.0,
-        n_round: int = 20,
+        n_round: int = 1,
 ):
     # 初始化团队
     team = Team()
@@ -319,6 +319,7 @@ async def main(
 
         # 获取当前关键词的相关知识
         knowledges = fetcher.query_knowledge(keyword)
+
         idea = keyword + '\n'.join(knowledges)
 
         logger.info(f"Processing knowledge for keyword: {keyword}")
