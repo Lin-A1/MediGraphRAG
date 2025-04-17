@@ -301,7 +301,7 @@ def calculate_time(func):
 @calculate_time
 async def main(
         investment: float = 1000.0,
-        n_round: int = 1,
+        n_round: int = 2,
 ):
     # 初始化团队
     team = Team()

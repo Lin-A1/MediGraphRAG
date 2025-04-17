@@ -528,7 +528,8 @@ class questionGeneration(Action):
         # return text
 
         # 初始化 Ollama 模型
-        llm = Ollama(model="qwen2.5:14b")
+        # llm = Ollama(model="qwen2.5:14b")
+        llm = Ollama(model="glm4:latest")
 
         # 定义用于模型判断的 Prompt
         judge_prompt = """
