@@ -24,8 +24,12 @@ MediGraphRAG 项目旨在构建一个医疗知识图谱并基于此实现 RAG（
 
 ```sh
 # ollama
+# ollama自行选择参数量大小，同时可以选择调用api，只需要在comfig上进行修改metagpt配置即可
+# 同时留意agent/questionGenerator.py中有调用ollama模块进行试题生成的验证，可以将其注释掉，强行判断验证结果，
 curl -fsSL https://ollama.com/install.sh | sh # unbutu
 ollama run qwen2.5
+ollama run glm4
+ollama run deepseek-r1
 
 # docker
 docker pull neo4j:latest
@@ -35,6 +39,7 @@ docker run --name med-neo4j -d -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/tes
 cd model
 git lfs install
 git clone https://huggingface.co/BAAI/bge-large-zh-v1.5
+git clone https://huggingface.co/BAAI/bge-reranker-v2-m3
 
 # python
 conda create -n med python=3.10
@@ -62,11 +67,15 @@ cd MediGraphRAG
 conda activate med
 
 # 创建neo4j知识图谱
-cd dautilsta
+cd utils
 python GraphBuilder.py
 
-# 进行检索生成
-python generate.py
+# 进行检索生成（仅支持ollama）
+cd ..
+python utils/generate.py
+
+# 使用智能体
+python main.py
 ```
 
 构建流程可见[process.md](docx/process.md)
@@ -92,7 +101,7 @@ python generate.py
 同样使用`qwen2.5:14b`从抽取的知识点中识别实体与关系。数据存储在[graph.json](data/knowledge/graph.json)中。模型抽取时需指定实体与关系类别，避免错误抽取。
 
 #### 3. **Neo4j构建**
-使用[Neo4jBuilder.py](process/data/Neo4jBuilder.py)将知识图谱数据导入Neo4j图数据库，以支持高效检索。
+使用[Neo4jBuilder.py](docx/process/data/Neo4jBuilder.py)将知识图谱数据导入Neo4j图数据库，以支持高效检索。
 
 ---
 
@@ -102,13 +111,13 @@ python generate.py
 使用`bge-large-zh-v1.5`进行实体和知识点编码
 
 #### 2. **Neo4j数据提取**
-使用[Neo4jEntityFetcher.py](process/rag/Neo4jEntityFetcher.py)从Neo4j提取实体，提供基于属性、标签等条件的查询接口。
+使用[Neo4jEntityFetcher.py](docx/process/rag/Neo4jEntityFetcher.py)从Neo4j提取实体，提供基于属性、标签等条件的查询接口。
 
 #### 3. **FAISS索引生成**
-通过[IndexBuild.py](process/rag/IndexBuild.py)构建FAISS索引，用于快速匹配实体和知识点。
+通过[IndexBuild.py](docx/process/rag/IndexBuild.py)构建FAISS索引，用于快速匹配实体和知识点。
 
 #### 4. **RAG工作流**
-在[ragWorkflow.py](process/rag/ragWorkflow.py)中，输入关键词，利用FAISS索引进行实体匹配，提取相关知识点，生成医学试题。
+在[ragWorkflow.py](docx/process/rag/ragWorkflow.py)中，输入关键词，利用FAISS索引进行实体匹配，提取相关知识点，生成医学试题。
 
 
 ---
@@ -132,6 +141,9 @@ python generate.py
 ```
 
 ## Agent
+>调用智能体使用的是metagpt架构，可以选择调用api，只需要在comfig上进行修改metagpt配置即可
+> 
+>同时留意agent/questionGenerator.py中有调用ollama模块进行试题生成的验证，可以将其注释掉，强行判断验证结果，
 
 在上述数据准备的基础上，我们使用`metagpt`构建试题，启动脚本为[main.py](main.py),相关agent配置位于[agent](agent),其他脚本位于[utils](utils)
 

@@ -6,7 +6,7 @@ from tqdm import tqdm
 from neo4j import GraphDatabase
 import time
 
-with open('../../data/graph/graph.json') as file:
+with open('../../../data/graph/graph.json') as file:
     data = json.load(file)
 
 class Neo4jHandler:

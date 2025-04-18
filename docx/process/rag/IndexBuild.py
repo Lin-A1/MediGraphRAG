@@ -35,4 +35,4 @@ index.add(embeddings)
 
 faiss.write_index(index, '../../data/faiss_index/faiss_index.index')
 
-np.save('../../data/faiss_index/matedata.npy', ids)
+np.save('../../../data/faiss_index/matedata.npy', ids)

@@ -15,4 +15,4 @@ logs
 agent/metagpt
 agent/workspace
 agent/logs
-api/logs
+web/api/logs
