@@ -56,8 +56,11 @@ class knowClean(Action):
     async def run(self, knowledge: str):
         prompt = self.PROMPT_TEMPLATE.format(knowledge=knowledge)
         rsp = await self._aask(prompt)
-        text = parse_json(rsp)
-        return text
+        # text = parse_json(rsp)
+        # return text
+        return rsp
+
+
 class knowCleaner(Role):
     name: str = "Knowledge cleaner"
     profile: str = "进行图谱提取数据的清洗与增强"

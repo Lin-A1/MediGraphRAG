@@ -584,7 +584,8 @@ class questionGeneration(Action):
                 logger.info(f"生成的题目不符合要求，未保存")
         except json.JSONDecodeError:
             logger.info(f"输出格式错误")
-        return text
+        # return
+        return rsp
 
 
 class questionGenerator(Role):
