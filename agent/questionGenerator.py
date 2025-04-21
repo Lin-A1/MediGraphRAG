@@ -603,7 +603,6 @@ class questionGenerator(Role):
         todo = self.rc.todo
         msg = self.get_memories(k=1)[0]
         context = self.get_memories()
-        knowledge_description = await todo.run(context)
-        msg = Message(knowledge_description=knowledge_description, role=self.profile, cause_by=type(todo))
-
+        msg = await todo.run(context)
+        # msg = Message(cause_by=type(todo), context=context, send_to="Human")
         return msg
