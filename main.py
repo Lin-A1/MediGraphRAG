@@ -327,7 +327,7 @@ async def main(
 
         # 运行项目
         team.run_project(idea)
-        await team.run(n_round=n_round)
+        res = await team.run(n_round=n_round)
 
 
 if __name__ == "__main__":

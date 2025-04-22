@@ -3,7 +3,7 @@ import random
 import re
 import os
 
-from langchain.llms import Ollama
+from langchain_community.llms import Ollama
 from metagpt.actions import Action
 from metagpt.logs import logger
 from metagpt.roles import Role
@@ -558,7 +558,8 @@ class questionGeneration(Action):
                 return False
 
         # 生成的题目
-        q = random.choice(qtype)
+        # q = random.choice(qtype)
+        q = random.choice(qtype[:-1])
         qtype = '试题类型' + '-' + q['名称'] + '-特点：' + q['特点']
         case = f"""
         ```json
@@ -604,5 +605,5 @@ class questionGenerator(Role):
         msg = self.get_memories(k=1)[0]
         context = self.get_memories()
         msg = await todo.run(context)
-        # msg = Message(cause_by=type(todo), context=context, send_to="Human")
+        msg = Message(cause_by=type(todo), context=context, role=msg, send_to="Human")
         return msg

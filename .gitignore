@@ -16,3 +16,6 @@ agent/metagpt
 agent/workspace
 agent/logs
 web/api/logs
+web/frontend/node_modules
+config/config.yaml
+config/config2.yaml

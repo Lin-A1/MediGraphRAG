@@ -76,6 +76,13 @@ python utils/generate.py
 
 # 使用智能体
 python main.py
+
+# 可视化页面
+cd web/frontend
+npm install
+
+cd ../../
+bash web/run.sh
 ```
 
 构建流程可见[process.md](docx/process.md)
@@ -89,6 +96,10 @@ python main.py
 2025.03.24：
 - 作者显卡换了，模型改用14b
 - 引入rerank模型，在知识库调出知识点后进行一次重排序
+
+2025.03.24：
+- 开始使用api啦！（可以自己在config中选择ollama还是api）
+- 在web目录下构建了web页面
 ```
 ---
 

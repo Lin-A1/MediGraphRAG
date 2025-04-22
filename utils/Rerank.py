@@ -27,9 +27,9 @@ class Reranker:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_name)
 
-        # # 如果支持 FP16，则启用混合精度，作者换卡了没显存了qwq
-        # if use_fp16 and torch.cuda.is_available():
-        #     self.model = self.model.half().cuda()
+        # # 如果支持 FP16，则启用混合精度
+        if use_fp16 and torch.cuda.is_available():
+            self.model = self.model.half().cuda()
 
         # 设置模型为评估模式
         self.model.eval()
@@ -55,9 +55,9 @@ class Reranker:
             max_length=512
         )
 
-        # 将输入移动到 GPU（如果可用），作者换卡了没显存了qwq
-        # if torch.cuda.is_available():
-        #     inputs = {key: value.cuda() for key, value in inputs.items()}
+        # 将输入移动到 GPU（如果可用）
+        if torch.cuda.is_available():
+            inputs = {key: value.cuda() for key, value in inputs.items()}
 
         # 模型推理
         with torch.no_grad():

@@ -9,5 +9,6 @@
 
 llm:
   api_type: 'dashscope'
-  api_key: 'xxxxxxxxxxxxxx'
-  model: 'deepseek-r1'
+  api_key: 'sk-0510de2c979d43ec8c7997b55cb00edb'
+  # model: 'deepseek-r1-distill-qwen-32b'
+  model: 'qwen2.5-32b-instruct'

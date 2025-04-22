@@ -56,6 +56,7 @@ def create_docx(questions, filename):
     # 保存文档
     doc.save(filename)
 
+
 with open('../save/questionGeneration.json', 'r', encoding='utf-8') as f:
     questions = json.load(f)
 
