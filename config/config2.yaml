@@ -1,17 +1,13 @@
 # Full Example: https://github.com/geekan/MetaGPT/blob/main/config/config2.example.yaml
 # Reflected Code: https://github.com/geekan/MetaGPT/blob/main/metagpt/config2.py
 # Config Docs: https://docs.deepwisdom.ai/main/en/guide/get_started/configuration.html
+
+#llm:
+#  api_type: 'ollama'
+#  base_url: 'http://127.0.0.1:11434/api'
+#  model: 'qwen2.5:14b'
+
 llm:
-  api_type: 'ollama'
-  base_url: 'http://127.0.0.1:11434/api'
-  model: 'qwen2.5:14b'
-
-#llm:
-#  api_type: 'zhipuai'
-#  api_key: '28f77c720c8367417dde789021b3dd1e.Yhr1Ds5wAY5acI4R'
-#  model: 'glm-4-plus'
-
-#llm:
-#  api_type: 'dashscope'
-#  api_key: 'sk-0510de2c979d43ec8c7997b55cb00edb'
-#  model: 'qwen-max'
+  api_type: 'dashscope'
+  api_key: 'xxxxxxxxxxxxxx'
+  model: 'qwen-max'
