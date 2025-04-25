@@ -173,27 +173,27 @@ const graphOptions = {
     layout: 'force',
     data: [],
     links: [],
+    categories: [
+      { name: '知识点' },
+      { name: '疾病' },
+      { name: '症状' },
+      { name: '药物' }
+    ],
     force: {
-      repulsion: 2000,  // 增加节点之间的斥力
-      edgeLength: [100, 300],  // 增加边的长度范围
-      gravity: 0.05,  // 减小重力，让节点分布更开
-      layoutAnimation: true  // 启用布局动画
+      repulsion: 1500,
+      edgeLength: [50, 200],
+      gravity: 0.1,
+      layoutAnimation: true
     },
-    zoom: 0.8,  // 默认缩小一点以显示更多内容
-    roam: true,  // 允许缩放和平移
-    nodeScaleRatio: 0.6,  // 防止节点太大
-    draggable: true,  // 允许拖拽节点
-    layout: 'force',
-    emphasis: {
-      focus: 'adjacency'  // 突出显示相邻节点
-    },
+    zoom: 1.2,
     roam: true,
+    nodeScaleRatio: 0.7,
+    draggable: true,
     label: {
       show: true,
       position: 'right',
       formatter: function(params) {
         const name = params.data.name;
-        // 如果名称长度超过8个字符，显示前8个字符加省略号
         return name.length > 8 ? name.substring(0, 8) + '...' : name;
       },
       fontSize: 12,
@@ -201,11 +201,6 @@ const graphOptions = {
       backgroundColor: 'rgba(255, 255, 255, 0.8)',
       padding: [2, 4],
       borderRadius: 2
-    },
-    force: {
-      repulsion: 1000,
-      edgeLength: [50, 200],
-      gravity: 0.1
     },
     emphasis: {
       focus: 'adjacency',
@@ -215,7 +210,6 @@ const graphOptions = {
       label: {
         show: true,
         formatter: function(params) {
-          // 鼠标悬停时显示完整名称
           return params.data.name;
         },
         fontSize: 14,
@@ -228,14 +222,18 @@ const graphOptions = {
     lineStyle: {
       color: '#64748b',
       curveness: 0.3,
-      width: 2
+      width: 2,
+      opacity: 0.7
     },
     itemStyle: {
       borderWidth: 2,
       borderColor: '#fff',
       shadowBlur: 10,
       shadowColor: 'rgba(0, 0, 0, 0.3)'
-    }
+    },
+    animation: true,
+    animationDuration: 1000,
+    animationEasingUpdate: 'quinticInOut'
   }]
 };
 
@@ -287,117 +285,92 @@ const updateGraphData = (nodes, links) => {
     console.error("图表实例未找到");
     return;
   }
-  
-  console.log("更新图表数据:", { nodes, links });
-  
+
+  console.log("开始更新图表数据:", { nodes, links });
+
+  // 确保数据格式正确
+  const validNodes = Array.isArray(nodes) ? nodes : [];
+  const validLinks = Array.isArray(links) ? links : [];
+
+  console.log("有效数据:", { validNodes, validLinks });
+
   const option = {
+    ...graphOptions,
     series: [{
-      type: 'graph',
-      layout: 'force',
-      data: nodes.map(node => ({
-        name: node.name,
-        value: node.value,
-        category: node.category,
-        symbolSize: node.isBaseNode ? 60 : 40,
+      ...graphOptions.series[0],
+      data: validNodes.map(node => ({
+        ...node,
         itemStyle: {
-          color: '#1976d2', // 统一使用蓝色
-          opacity: node.isBaseNode ? 1 : 0.6
+          color: node.color || '#1976d2',
+          opacity: node.isBaseNode ? 1 : 0.8,
+          borderWidth: node.isBaseNode ? 3 : 2
+        },
+        symbolSize: node.isBaseNode ? 65 : (node.symbolSize || 50),
+        label: {
+          ...graphOptions.series[0].label,
+          show: true
         }
       })),
-      links: links.map(link => ({
-        source: link.source,
-        target: link.target,
+      links: validLinks.map(link => ({
+        ...link,
+        lineStyle: {
+          ...graphOptions.series[0].lineStyle,
+          curveness: Math.random() * 0.3
+        },
         label: {
           show: true,
-          formatter: function(params) {
-            const label = params.data.label;
-            // 如果label是对象，则显示其type属性
-            if (typeof label === 'object' && label !== null) {
-              return label.type || '关联';
-            }
-            // 如果label是字符串，直接显示
-            return label || '关联';
-          },
-          fontSize: 12,
+          formatter: link.label,
+          fontSize: 10,
           color: '#64748b',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          padding: [4, 8],
-          borderRadius: 4,
           position: 'middle'
-        },
-        lineStyle: {
-          width: 2,
-          curveness: 0.3,
-          color: '#64748b'
         }
-      })),
-      categories: [
-        { name: '知识点' },
-        { name: '疾病' },
-        { name: '症状' },
-        { name: '药物' }
-      ],
-      roam: true,
-      label: {
-        show: true,
-        position: 'right',
-        formatter: function(params) {
-          const name = params.data.name;
-          return name.length > 8 ? name.substring(0, 8) + '...' : name;
-        },
-        fontSize: 12,
-        color: '#333',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
-        padding: [2, 4],
-        borderRadius: 2
-      },
-      force: {
-        repulsion: 1000,
-        edgeLength: [50, 200],
-        gravity: 0.1
-      },
-      emphasis: {
-        focus: 'adjacency',
-        lineStyle: {
-          width: 4
-        },
-        label: {
-          show: true,
-          formatter: function(params) {
-            return params.data.name;
-          },
-          fontSize: 14,
-          fontWeight: 'bold',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          padding: [4, 8],
-          borderRadius: 4
-        }
-      },
-      lineStyle: {
-        color: '#64748b',
-        curveness: 0.3,
-        width: 2
-      },
-      itemStyle: {
-        borderWidth: 2,
-        borderColor: '#fff',
-        shadowBlur: 10,
-        shadowColor: 'rgba(0, 0, 0, 0.3)'
-      }
+      }))
     }]
   };
-  
+
+  // 如果没有数据，显示提示信息
+  if (validNodes.length === 0) {
+    option.graphic = [{
+      type: 'text',
+      left: 'center',
+      top: 'middle',
+      style: {
+        text: '暂无相关图谱数据',
+        fontSize: 14,
+        fill: '#64748b'
+      }
+    }];
+  } else {
+    option.graphic = [];
+  }
+
   console.log("设置图表选项:", option);
   graphChart.value.setOption(option, true);
+
+  // 如果有数据，调整布局
+  if (validNodes.length > 0) {
+    setTimeout(() => {
+      graphChart.value?.setOption({
+        series: [{
+          force: {
+            layoutAnimation: true,
+            repulsion: validNodes.length < 5 ? 300 : 1500, // 根据节点数量调整斥力
+            edgeLength: validNodes.length < 5 ? [50, 150] : [50, 200] // 根据节点数量调整边长度
+          },
+          nodeScaleRatio: validNodes.length < 5 ? 0.8 : 0.7
+        }]
+      });
+    }, 10);
+  }
 };
 
 // 搜索关键词相关的知识图谱
 const searchGraphByKeyword = async (query) => {
   if (!query) return;
-  
+
   graphLoading.value = true;
   graphError.value = '';
-  
+
   try {
     console.log("开始搜索图谱:", query);
     const response = await fetch(`${API_BASE_URL}/graph/search`, {
@@ -407,40 +380,66 @@ const searchGraphByKeyword = async (query) => {
       },
       body: JSON.stringify({ keyword: query })
     });
-    
+
     if (!response.ok) {
       throw new Error('获取图谱数据失败');
     }
-    
+
     const data = await response.json();
     console.log("获取到图谱数据:", data);
-    
-    // 更新图谱数据，保留现有数据
+
+    // 确保数据格式正确
+    const nodes = Array.isArray(data.nodes) ? data.nodes : [];
+    const links = Array.isArray(data.links) ? data.links : [];
+
+    console.log("处理后的数据:", { nodes, links });
+
+    // 更新图谱数据状态
     if (!graphData.value) {
-      graphData.value = { query, timestamp: Date.now() };
+      // 第一次搜索，直接赋值
+      graphData.value = {
+        query,
+        timestamp: Date.now(),
+        nodes,
+        links
+      };
     } else {
+      // 后续搜索，合并数据
+      const existingNodes = new Map(graphData.value.nodes.map(node => [node.name, node]));
+      const existingLinks = new Set(
+        graphData.value.links.map(link => `${link.source}-${link.label}-${link.target}`)
+      );
+
+      // 添加新节点
+      nodes.forEach(node => {
+        if (!existingNodes.has(node.name)) {
+          graphData.value.nodes.push(node);
+        }
+      });
+
+      // 添加新连接
+      links.forEach(link => {
+        const linkKey = `${link.source}-${link.label}-${link.target}`;
+        if (!existingLinks.has(linkKey)) {
+          graphData.value.links.push(link);
+        }
+      });
+
+      // 更新查询关键词
       graphData.value.query = graphData.value.query + '、' + query;
+      graphData.value.timestamp = Date.now();
     }
-    
-    // 更新图表数据，合并新数据
-    const existingNodes = graphChart.value?.getOption()?.series[0]?.data || [];
-    const existingLinks = graphChart.value?.getOption()?.series[0]?.links || [];
-    
-    const newNodes = data.nodes.filter(node => 
-      !existingNodes.some(existingNode => existingNode.name === node.name)
-    );
-    const newLinks = data.links.filter(link => 
-      !existingLinks.some(existingLink => 
-        existingLink.source === link.source && 
-        existingLink.target === link.target
-      )
-    );
-    
-    updateGraphData([...existingNodes, ...newNodes], [...existingLinks, ...newLinks]);
-    
+
+    console.log("更新后的图谱数据状态:", graphData.value);
+
+    // 更新图表显示
+    updateGraphData(graphData.value.nodes, graphData.value.links);
+
   } catch (err) {
     console.error("图谱查询失败:", err);
     graphError.value = "图谱数据查询失败: " + err.message;
+    // 即使出错也尝试更新图表为空状态
+    updateGraphData([], []);
   } finally {
     graphLoading.value = false;
   }
@@ -509,6 +508,22 @@ const cancelRequest = () => {
   loadingStates.progress = 0;
 };
 
+// 添加重置图谱的函数
+const resetGraph = () => {
+  if (graphChart.value) {
+    console.log("重置图谱...");
+    graphChart.value.setOption({
+      series: [{
+        data: [],
+        links: []
+      }],
+      graphic: [] // 清除可能存在的提示信息
+    });
+  }
+  graphData.value = null; // 清空图谱数据状态
+  graphError.value = ''; // 清除错误信息
+};
+
 // 获取知识点和试题
 const fetchKnowledgeAndQuestion = async () => {
   if (!keyword.value.trim()) {
@@ -529,18 +544,8 @@ const fetchKnowledgeAndQuestion = async () => {
     selectedAnswer.value = '';
     knowledgeData.value = null;
     
-    // 清空知识图谱
-    graphData.value = null;
-    if (graphChart.value) {
-      graphChart.value.setOption({
-        ...graphOptions,
-        series: [{
-          ...graphOptions.series[0],
-          data: [],
-          links: []
-        }]
-      });
-    }
+    // 重置图谱
+    resetGraph();
     
     // 启动进度条模拟
     startProgressSimulation();
@@ -568,10 +573,22 @@ const fetchKnowledgeAndQuestion = async () => {
     // 使用所有相关词搜索图谱
     if (data.related_keywords && data.related_keywords.length > 0) {
       await nextTick();
-      // 使用所有相关词
-      for (const relatedKeyword of data.related_keywords) {
-        await searchGraphByKeyword(relatedKeyword);
+      try {
+        const keywordsToSearch = [keyword.value, ...data.related_keywords];
+        const uniqueKeywords = [...new Set(keywordsToSearch)]; // 去重
+
+        console.log("开始搜索图谱，关键词:", uniqueKeywords);
+        for (const kw of uniqueKeywords) {
+          await searchGraphByKeyword(kw);
+        }
+      } catch (graphErr) {
+        console.error('图谱更新失败:', graphErr);
+        graphError.value = '图谱更新失败: ' + graphErr.message;
       }
+    } else {
+      // 如果没有相关关键词，至少搜索主关键词
+      console.log("开始搜索图谱，关键词:", [keyword.value]);
+      await searchGraphByKeyword(keyword.value);
     }
     
   } catch (err) {
@@ -868,58 +885,64 @@ html, body {
 .app-container {
   height: 100%;
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .app-header {
-  background: linear-gradient(135deg, #1976d2, #1565c0);
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
   color: white;
-  padding: 15px 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 18px 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   z-index: 10;
+  position: relative;
 }
 
 .logo {
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
-  max-width: 1300px;
+  max-width: 1800px;
   margin: 0 auto;
   width: 100%;
   min-height: 0;
   overflow: hidden;
+  gap: 20px;
 }
 
-/* 搜索区域样式 */
+/* 搜索区域美化 */
 .search-section {
   background-color: white;
-  padding: 15px 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.search-section:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
 .search-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #e0e7ff;
-  border-radius: 6px;
-  padding: 0 5px 0 15px;
+  border: 2px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 0 8px 0 20px;
   transition: all 0.3s;
   background-color: #f8faff;
 }
 
 .search-wrapper:focus-within {
-  border-color: #1976d2;
-  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+  border-color: #1e40af;
+  box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
 }
 
 .search-icon {
@@ -929,12 +952,12 @@ html, body {
 
 .search-input {
   flex: 1;
-  height: 46px;
-  padding: 0 10px;
-  font-size: 15px;
+  height: 52px;
+  padding: 0 16px;
+  font-size: 16px;
   border: none;
   background: transparent;
-  color: #334155;
+  color: #1e293b;
 }
 
 .search-input:focus {
@@ -946,25 +969,25 @@ html, body {
 }
 
 .search-button {
-  height: 38px;
-  padding: 0 20px;
-  background-color: #1976d2;
+  height: 44px;
+  padding: 0 28px;
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
+  transition: all 0.3s;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 80px;
+  min-width: 100px;
 }
 
 .search-button:hover {
-  background-color: #1565c0;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.25);
 }
 
 .search-button:active {
@@ -990,12 +1013,11 @@ html, body {
 
 /* 进度条样式 */
 .progress-container {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   background-color: white;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  animation: pulse 2s infinite;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 .progress-status {
@@ -1016,17 +1038,17 @@ html, body {
 }
 
 .progress-bar {
-  height: 8px;
+  height: 10px;
   background-color: #e0e7ff;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin: 20px 0;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(to right, #1976d2, #64b5f6);
-  border-radius: 4px;
+  background: linear-gradient(to right, #1e40af, #3b82f6);
+  border-radius: 5px;
   transition: width 0.5s ease;
 }
 
@@ -1145,54 +1167,53 @@ html, body {
 /* 内容区域样式 */
 .content-section {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   flex: 1;
   min-height: 0;
 }
 
 .left-section {
-  flex: 2;
+  flex: 2.5;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
   min-width: 0;
 }
 
 .card {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
 }
 
 .card:hover {
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .card-header {
-  padding: 15px 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: #1976d2;
+  padding: 15px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e40af;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8faff;
-  width: 100%;
-  box-sizing: border-box;
+  background: linear-gradient(to right, #f8faff, #f0f7ff);
 }
 
 .card-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 20px;
+  padding: 0 10px;
 }
 
 .related-keywords {
@@ -1207,22 +1228,19 @@ html, body {
 
 .card-content {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
   overflow: auto;
   position: relative;
-  min-height: 100px;
-  width: 100%;
-  box-sizing: border-box;
+  min-height: 120px;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
-  display: block;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -1231,7 +1249,7 @@ html, body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -1242,49 +1260,59 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;  /* 防止内容溢出 */
+  overflow: hidden;
+  max-height: 400px;  /* 限制最大高度 */
 }
 
 .knowledge-section .card-content {
-  overflow-y: auto;  /* 确保垂直方向可以滚动 */
+  overflow-y: auto;
+  max-height: 350px;  /* 限制内容区域最大高度 */
+}
+
+.knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;  /* 进一步减小间距 */
+}
+
+.knowledge-item {
+  padding: 10px 14px;  /* 进一步减小内边距 */
+  background-color: #f8faff;
+  border-radius: 6px;
+  line-height: 1.4;
+  border-left: 2px solid #1e40af;
+  transition: all 0.3s ease;
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 2px;  /* 添加底部间距 */
+}
+
+.knowledge-item:hover {
+  background-color: #f0f7ff;
+  transform: translateX(1px);
+  box-shadow: 0 1px 4px rgba(30, 64, 175, 0.1);
 }
 
 .quiz-section {
   flex: 1;
-  max-width: 380px;
-}
-
-/* 知识点列表样式 */
-.knowledge-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.knowledge-item {
-  padding: 12px 15px;
-  background-color: #f8faff;
-  border-radius: 6px;
-  line-height: 1.6;
-  border-left: 3px solid #1976d2;
-  font-size: 14px;
+  max-width: 460px;
 }
 
 /* 试题样式 */
 .question-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 25px;
 }
 
 .question-topic {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.7;
   color: #334155;
   background-color: #f8faff;
-  padding: 15px;
-  border-radius: 6px;
-  border-left: 3px solid #1976d2;
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid #1e40af;
 }
 
 .options-list {
@@ -1296,36 +1324,39 @@ html, body {
 .option-item {
   display: flex;
   align-items: flex-start;
-  padding: 10px;
+  padding: 16px;
   background-color: #f8faff;
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+  border: 2px solid #e5e7eb;
+}
+
+.option-item:hover {
+  background-color: #f0f7ff;
+  transform: translateY(-2px);
+  border-color: #1e40af;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
 }
 
 .option-marker {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #e0e7ff;
-  color: #4f46e5;
+  color: #1e40af;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
-  margin-right: 10px;
+  font-weight: 600;
+  margin-right: 16px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .option-text {
   flex: 1;
   padding-top: 4px;
-}
-
-.option-item:hover {
-  background-color: #f0f7ff;
-  transform: translateY(-1px);
 }
 
 .option-item.selected {
@@ -1448,39 +1479,37 @@ html, body {
   }
 }
 
-/* 响应式布局 */
+/* 响应式布局优化 */
 @media screen and (max-width: 768px) {
-  .app-header {
-    padding: 12px 20px;
-  }
-
   .main-content {
     padding: 15px;
   }
 
   .content-section {
     flex-direction: column;
+    gap: 15px;
   }
 
   .left-section {
     flex: none;
-    height: 60%;
+    height: auto;
   }
 
   .quiz-section {
     flex: none;
-    height: 40%;
+    height: auto;
     max-width: none;
   }
 
   .search-button {
-    min-width: 70px;
+    min-width: 90px;
+    padding: 0 20px;
   }
 }
 
 .graph-container {
   width: 100%;
-  height: 500px;
+  height: 520px;
   background-color: #fff;
   border-radius: 8px;
   overflow: hidden;
@@ -1490,7 +1519,7 @@ html, body {
 .graph-content {
   position: relative;
   height: 100%;
-  min-height: 500px;
+  min-height: 520px;
   padding: 0;
 }
 
@@ -1524,6 +1553,9 @@ html, body {
   min-height: 500px;
   display: flex;
   flex-direction: column;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 .card-content {

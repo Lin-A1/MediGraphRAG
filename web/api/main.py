@@ -274,160 +274,93 @@ async def search_graph(request: GraphSearchRequest):
             print(f"数据库中总节点数: {total_nodes}")
             
             if total_nodes == 0:
+                print("数据库为空")
                 return GraphResponse(nodes=[], links=[])
-            
-            # 查询与关键词直接相关的节点和关系（基本节点）
+
+            # 使用更简单的查询策略，避免重复边
             base_query = """
             MATCH (n)-[r]-(m)
             WHERE n.name CONTAINS $keyword OR m.name CONTAINS $keyword
-            RETURN DISTINCT n, r, m
-            LIMIT 10
+            WITH n, r, m
+            ORDER BY n.name, m.name, type(r)
+            WITH n, r, m, 
+                 CASE WHEN n.name < m.name THEN [n.name, m.name] ELSE [m.name, n.name] END as node_pair
+            WITH DISTINCT node_pair, r
+            RETURN node_pair[0] as source_name, node_pair[1] as target_name, type(r) as rel_type
             """
             
+            print(f"执行基础查询: {base_query}")
             base_result = session.run(base_query, keyword=request.keyword)
+            base_records = list(base_result)
+            print(f"基础查询返回记录数: {len(base_records)}")
             
             # 处理基本节点结果
             nodes = {}
             links = []
-            base_node_ids = set()
             
-            for record in base_result:
-                # 处理起始节点
-                source_node = record["n"]
-                if source_node.id not in nodes:
-                    nodes[source_node.id] = Node(
-                        name=source_node["name"],
-                        category=list(source_node.labels)[0],
-                        color=get_node_color(list(source_node.labels)[0]),
-                        isBaseNode=True
-                    )
-                    base_node_ids.add(source_node.id)
-                    print(f"添加基本节点: {source_node['name']} ({list(source_node.labels)[0]})")
+            # 首先收集所有节点
+            for record in base_records:
+                source_name = record["source_name"]
+                target_name = record["target_name"]
                 
-                # 处理目标节点
-                target_node = record["m"]
-                if target_node.id not in nodes:
-                    nodes[target_node.id] = Node(
-                        name=target_node["name"],
-                        category=list(target_node.labels)[0],
-                        color=get_node_color(list(target_node.labels)[0]),
-                        isBaseNode=True
+                if source_name not in nodes:
+                    nodes[source_name] = Node(
+                        name=source_name,
+                        category="知识点",  # 默认类别
+                        color=get_node_color("知识点"),
+                        isBaseNode=source_name == request.keyword,
+                        symbolSize=60 if source_name == request.keyword else 50
                     )
-                    base_node_ids.add(target_node.id)
-                    print(f"添加基本节点: {target_node['name']} ({list(target_node.labels)[0]})")
                 
-                # 处理关系
-                relationship = record["r"]
-                links.append(Link(
-                    source=source_node["name"],
-                    target=target_node["name"],
-                    label=relationship.type
-                ))
-                print(f"添加基本关系: {source_node['name']} -[{relationship.type}]-> {target_node['name']}")
+                if target_name not in nodes:
+                    nodes[target_name] = Node(
+                        name=target_name,
+                        category="知识点",  # 默认类别
+                        color=get_node_color("知识点"),
+                        isBaseNode=target_name == request.keyword,
+                        symbolSize=60 if target_name == request.keyword else 50
+                    )
             
-            # 查询与基本节点相关的其他节点（相关节点）
-            related_query = """
-            MATCH (n)-[r]-(m)
-            WHERE n.name CONTAINS $keyword OR m.name CONTAINS $keyword
-            WITH n, r, m
-            MATCH (n)-[r2]-(m2)
-            WHERE m2.name CONTAINS $keyword OR n.name CONTAINS $keyword
-            WITH n, r, m, r2, m2
-            MATCH (m)-[r3]-(m3)
-            WHERE m3.name CONTAINS $keyword OR m.name CONTAINS $keyword
-            RETURN DISTINCT n, r, m, r2, m2, r3, m3
-            LIMIT 100
-            """
-            
-            related_result = session.run(related_query, keyword=request.keyword)
-            
-            # 处理相关节点结果
-            for record in related_result:
-                # 处理起始节点
-                source_node = record["n"]
-                if source_node.id not in nodes:
-                    nodes[source_node.id] = Node(
-                        name=source_node["name"],
-                        category=list(source_node.labels)[0],
-                        color=get_node_color(list(source_node.labels)[0]),
-                        isBaseNode=False
-                    )
-                    print(f"添加相关节点: {source_node['name']} ({list(source_node.labels)[0]})")
+            # 然后添加关系
+            for record in base_records:
+                source_name = record["source_name"]
+                target_name = record["target_name"]
+                rel_type = record["rel_type"]
                 
-                # 处理目标节点
-                target_node = record["m"]
-                if target_node.id not in nodes:
-                    nodes[target_node.id] = Node(
-                        name=target_node["name"],
-                        category=list(target_node.labels)[0],
-                        color=get_node_color(list(target_node.labels)[0]),
-                        isBaseNode=False
-                    )
-                    print(f"添加相关节点: {target_node['name']} ({list(target_node.labels)[0]})")
-                
-                # 处理关系
-                relationship = record["r"]
-                links.append(Link(
-                    source=source_node["name"],
-                    target=target_node["name"],
-                    label=relationship.type
-                ))
-                print(f"添加相关关系: {source_node['name']} -[{relationship.type}]-> {target_node['name']}")
-                
-                # 处理第二个目标节点（如果存在）
-                if "m2" in record and record["m2"]:
-                    target_node2 = record["m2"]
-                    if target_node2.id not in nodes:
-                        nodes[target_node2.id] = Node(
-                            name=target_node2["name"],
-                            category=list(target_node2.labels)[0],
-                            color=get_node_color(list(target_node2.labels)[0]),
-                            isBaseNode=False
-                        )
-                        print(f"添加相关节点: {target_node2['name']} ({list(target_node2.labels)[0]})")
-                    
-                    # 处理第二个关系
-                    relationship2 = record["r2"]
+                # 检查是否已存在相同的链接
+                if not any(l.source == source_name and l.target == target_name and l.label == rel_type for l in links):
                     links.append(Link(
-                        source=source_node["name"],
-                        target=target_node2["name"],
-                        label=relationship2.type
+                        source=source_name,
+                        target=target_name,
+                        label=rel_type
                     ))
-                    print(f"添加相关关系: {source_node['name']} -[{relationship2.type}]-> {target_node2['name']}")
-                
-                # 处理第三个目标节点（如果存在）
-                if "m3" in record and record["m3"]:
-                    target_node3 = record["m3"]
-                    if target_node3.id not in nodes:
-                        nodes[target_node3.id] = Node(
-                            name=target_node3["name"],
-                            category=list(target_node3.labels)[0],
-                            color=get_node_color(list(target_node3.labels)[0]),
-                            isBaseNode=False
-                        )
-                        print(f"添加相关节点: {target_node3['name']} ({list(target_node3.labels)[0]})")
-                    
-                    # 处理第三个关系
-                    relationship3 = record["r3"]
-                    links.append(Link(
-                        source=target_node["name"],
-                        target=target_node3["name"],
-                        label=relationship3.type
-                    ))
-                    print(f"添加相关关系: {target_node['name']} -[{relationship3.type}]-> {target_node3['name']}")
             
-            print(f"查询结果: {len(nodes)} 个节点, {len(links)} 个关系")
+            print(f"最终结果: {len(nodes)} 个节点, {len(links)} 个关系")
+            
+            # 转换节点字典为列表
+            node_list = list(nodes.values())
+            
+            # 打印详细的返回数据
+            print("返回节点列表:")
+            for node in node_list:
+                print(f"- 节点: {node.name} (类型: {node.category})")
+            
+            print("返回关系列表:")
+            for link in links:
+                print(f"- 关系: {link.source} -[{link.label}]-> {link.target}")
             
             driver.close()
             
-            return GraphResponse(
-                nodes=list(nodes.values()),
-                links=links
-            )
+            response = GraphResponse(nodes=node_list, links=links)
+            print(f"响应数据: {response.json()}")
+            return response
             
     except Exception as e:
         print(f"查询出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        print(f"错误堆栈: {traceback.format_exc()}")
+        # 返回空结果而不是抛出错误
+        return GraphResponse(nodes=[], links=[])
 
 # 健康检查端点
 @app.get("/health")
