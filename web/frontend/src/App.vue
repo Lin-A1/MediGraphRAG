@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, reactive, nextTick } from 'vue';
+import { ref, onMounted, reactive, nextTick, watch } from 'vue';
 import * as echarts from 'echarts';
 import neo4j from 'neo4j-driver';
 
@@ -15,6 +15,26 @@ const graphError = ref('');
 const graphData = ref(null);
 const graphChart = ref(null);
 const graphContainer = ref(null);
+const graphFullContainer = ref(null); // 添加独立视图的图表容器引用
+const currentView = ref('home'); // 'home', 'graph' 或 'knowledge'
+const hasSearched = ref(false); // 添加一个标记来跟踪是否已进行过搜索
+
+// 切换视图的方法
+const switchView = (view) => {
+  currentView.value = view;
+  
+  // 切换视图后，等待 DOM 更新完成后初始化对应的图表
+  nextTick(() => {
+    if (view === 'graph') {
+      initGraphFull();
+    } else if (view === 'home') {
+      // 确保切回主页时图表也会初始化
+      if (hasSearched.value) {
+        initGraph();
+      }
+    }
+  });
+};
 
 // Neo4j连接配置
 const neovisConfig = {
@@ -156,7 +176,7 @@ const API_BASE_URL = 'http://localhost:8000';
 // 图表配置
 const graphOptions = {
   title: {
-    text: '知识图谱',
+    text: '',
     left: 'center'
   },
   tooltip: {
@@ -240,12 +260,13 @@ const graphOptions = {
 // 初始化图表
 const initGraph = () => {
   if (!graphContainer.value) {
-    console.error("图谱容器未找到");
+    console.error("主页图谱容器未找到");
+    console.log("DOM元素状态:", document.getElementById("neovis-graph"));
     return;
   }
 
   try {
-    console.log("开始初始化图表...");
+    console.log("开始初始化主页图表...");
     if (graphChart.value) {
       graphChart.value.dispose();
     }
@@ -255,7 +276,7 @@ const initGraph = () => {
     graphContainer.value.style.height = '500px';
     
     graphChart.value = echarts.init(graphContainer.value);
-    console.log("ECharts实例创建成功");
+    console.log("主页ECharts实例创建成功");
     
     // 设置初始空数据
     graphChart.value.setOption({
@@ -272,10 +293,15 @@ const initGraph = () => {
       graphChart.value?.resize();
     });
     
-    console.log("图表初始化成功");
+    // 如果已有数据，加载到图表
+    if (graphData.value) {
+      updateGraphData(graphData.value.nodes, graphData.value.links);
+    }
+    
+    console.log("主页图表初始化成功");
   } catch (err) {
-    console.error("图表初始化失败:", err);
-    graphError.value = "图表初始化失败: " + err.message;
+    console.error("主页图表初始化失败:", err);
+    graphError.value = "主页图表初始化失败: " + err.message;
   }
 };
 
@@ -432,14 +458,42 @@ const searchGraphByKeyword = async (query) => {
 
     console.log("更新后的图谱数据状态:", graphData.value);
 
-    // 更新图表显示
-    updateGraphData(graphData.value.nodes, graphData.value.links);
+    // 根据当前视图更新对应图表
+    if (currentView.value === 'home') {
+      // 更新主页图表
+      if (graphChart.value) {
+        updateGraphData(graphData.value.nodes, graphData.value.links);
+      } else {
+        // 如果主页图表未初始化，尝试初始化
+        nextTick(() => {
+          initGraph();
+        });
+      }
+    } else if (currentView.value === 'graph') {
+      // 更新独立视图图表
+      const fullChart = graphFullContainer.value ? echarts.getInstanceByDom(graphFullContainer.value) : null;
+      if (fullChart) {
+        updateFullGraphData(fullChart, graphData.value.nodes, graphData.value.links);
+      } else {
+        // 如果独立视图图表未初始化，尝试初始化
+        nextTick(() => {
+          initGraphFull();
+        });
+      }
+    }
 
   } catch (err) {
     console.error("图谱查询失败:", err);
     graphError.value = "图谱数据查询失败: " + err.message;
     // 即使出错也尝试更新图表为空状态
-    updateGraphData([], []);
+    if (currentView.value === 'home' && graphChart.value) {
+      updateGraphData([], []);
+    } else if (currentView.value === 'graph' && graphFullContainer.value) {
+      const fullChart = echarts.getInstanceByDom(graphFullContainer.value);
+      if (fullChart) {
+        updateFullGraphData(fullChart, [], []);
+      }
+    }
   } finally {
     graphLoading.value = false;
   }
@@ -526,6 +580,9 @@ const resetGraph = () => {
 
 // 获取知识点和试题
 const fetchKnowledgeAndQuestion = async () => {
+  // 开始搜索时立即设置hasSearched
+  hasSearched.value = true;
+  
   if (!keyword.value.trim()) {
     error.value = '请输入搜索关键词';
     return;
@@ -546,7 +603,6 @@ const fetchKnowledgeAndQuestion = async () => {
     
     // 重置图谱
     resetGraph();
-    
     // 启动进度条模拟
     startProgressSimulation();
     
@@ -631,13 +687,193 @@ const checkHealth = async () => {
   }
 };
 
+// 初始化独立视图的图表
+const initGraphFull = () => {
+  if (!graphFullContainer.value) {
+    console.error("独立图谱容器未找到");
+    console.log("DOM元素状态:", document.getElementById("neovis-graph-full"));
+    return;
+  }
+
+  try {
+    console.log("开始初始化独立图表...");
+    
+    // 确保容器有尺寸
+    graphFullContainer.value.style.width = '100%';
+    graphFullContainer.value.style.height = 'calc(100vh - 220px)';
+    
+    // 清除可能存在的旧实例
+    const existingChart = echarts.getInstanceByDom(graphFullContainer.value);
+    if (existingChart) {
+      existingChart.dispose();
+    }
+    
+    const fullChart = echarts.init(graphFullContainer.value);
+    console.log("独立视图ECharts实例创建成功");
+    
+    // 设置初始空数据
+    fullChart.setOption({
+      ...graphOptions,
+      series: [{
+        ...graphOptions.series[0],
+        data: [],
+        links: []
+      }]
+    });
+    
+    // 自适应大小
+    window.addEventListener('resize', () => {
+      const chart = echarts.getInstanceByDom(graphFullContainer.value);
+      chart?.resize();
+    });
+    
+    // 如果已有数据，加载到新图表
+    if (graphData.value) {
+      updateFullGraphData(fullChart, graphData.value.nodes, graphData.value.links);
+    }
+    
+    console.log("独立图表初始化成功");
+  } catch (err) {
+    console.error("独立图表初始化失败:", err);
+    graphError.value = "独立图表初始化失败: " + err.message;
+  }
+};
+
+// 更新独立视图的图表数据
+const updateFullGraphData = (chart, nodes, links) => {
+  if (!chart) {
+    console.error("独立图表实例未找到");
+    return;
+  }
+
+  console.log("开始更新独立图表数据:", { nodes, links });
+
+  // 确保数据格式正确
+  const validNodes = Array.isArray(nodes) ? nodes : [];
+  const validLinks = Array.isArray(links) ? links : [];
+
+  console.log("有效数据:", { validNodes, validLinks });
+
+  const option = {
+    ...graphOptions,
+    series: [{
+      ...graphOptions.series[0],
+      data: validNodes.map(node => ({
+        ...node,
+        itemStyle: {
+          color: node.color || '#1976d2',
+          opacity: node.isBaseNode ? 1 : 0.8,
+          borderWidth: node.isBaseNode ? 3 : 2
+        },
+        symbolSize: node.isBaseNode ? 65 : (node.symbolSize || 50),
+        label: {
+          ...graphOptions.series[0].label,
+          show: true
+        }
+      })),
+      links: validLinks.map(link => ({
+        ...link,
+        lineStyle: {
+          ...graphOptions.series[0].lineStyle,
+          curveness: Math.random() * 0.3
+        },
+        label: {
+          show: true,
+          formatter: link.label,
+          fontSize: 10,
+          color: '#64748b',
+          position: 'middle'
+        }
+      }))
+    }]
+  };
+
+  // 如果没有数据，显示提示信息
+  if (validNodes.length === 0) {
+    option.graphic = [{
+      type: 'text',
+      left: 'center',
+      top: 'middle',
+      style: {
+        text: '暂无相关图谱数据',
+        fontSize: 14,
+        fill: '#64748b'
+      }
+    }];
+  } else {
+    option.graphic = [];
+  }
+
+  console.log("设置独立图表选项:", option);
+  chart.setOption(option, true);
+
+  // 如果有数据，调整布局
+  if (validNodes.length > 0) {
+    setTimeout(() => {
+      chart?.setOption({
+        series: [{
+          force: {
+            layoutAnimation: true,
+            repulsion: validNodes.length < 5 ? 300 : 1500,
+            edgeLength: validNodes.length < 5 ? [50, 150] : [50, 200]
+          },
+          nodeScaleRatio: validNodes.length < 5 ? 0.8 : 0.7
+        }]
+      });
+    }, 10);
+  }
+};
+
+// 监听图谱数据变化，同步更新独立视图
+watch(graphData, (newData) => {
+  if (currentView.value === 'graph' && graphFullContainer.value) {
+    nextTick(() => {
+      const fullChart = echarts.getInstanceByDom(graphFullContainer.value);
+      if (fullChart && newData) {
+        updateFullGraphData(fullChart, newData.nodes, newData.links);
+      }
+    });
+  }
+});
+
 // 组件挂载时检查API健康状态
 onMounted(() => {
   checkHealth();
+  console.log("组件已挂载，等待DOM更新...");
+  // 使用nextTick确保DOM已更新
   nextTick(() => {
-    initGraph();
+    console.log("DOM已更新，尝试初始化图表...");
+    // 根据当前视图初始化相应的图表
+    if (currentView.value === 'home') {
+      initGraph();
+    } else if (currentView.value === 'graph') {
+      initGraphFull();
+    }
   });
 });
+
+// 监听视图变化，确保在视图DOM更新后图表能正确初始化
+watch(currentView, (newView) => {
+  console.log("视图已切换至:", newView);
+  nextTick(() => {
+    if (newView === 'home') {
+      initGraph();
+    } else if (newView === 'graph') {
+      initGraphFull();
+    }
+  });
+});
+
+// 为了防止DOM还未准备好，添加延迟初始化
+setTimeout(() => {
+  if (currentView.value === 'home' && !graphChart.value && graphContainer.value) {
+    console.log("延迟初始化主页图表...");
+    initGraph();
+  } else if (currentView.value === 'graph' && graphFullContainer.value) {
+    console.log("延迟初始化独立图表...");
+    initGraphFull();
+  }
+}, 500);
 </script>
 
 <template>
@@ -647,200 +883,355 @@ onMounted(() => {
     </div>
     
     <div class="main-content">
-      <!-- 搜索区域 -->
-      <div class="search-section">
-        <div class="search-wrapper">
-          <div class="search-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </div>
-          <input 
-            type="text" 
-            v-model="keyword" 
-            placeholder="输入医学关键词进行搜索..." 
-            class="search-input"
-            @keyup.enter="fetchKnowledgeAndQuestion"
-            :disabled="loading"
-          >
-          <button v-if="!loading" 
-            class="search-button" 
-            @click="fetchKnowledgeAndQuestion"
-          >
-            <span>搜索</span>
-          </button>
-          <button v-else
-            class="search-button cancel-button" 
-            @click="cancelRequest"
-          >
-            <span>取消</span>
-          </button>
+      <!-- 左侧导航栏 -->
+      <div class="left-navigation">
+        <div class="nav-logo">
+          <div class="logo-text">医学图谱</div>
+          <span class="collapse-btn">«</span>
         </div>
-        <div v-if="error" class="error-message">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          {{ error }}
-        </div>
-      </div>
-
-      <!-- 加载进度条 -->
-      <div v-if="loading" class="progress-container">
-        <div class="progress-status">
-          <div class="status-text">{{ loadingStates.status }}</div>
-          <div class="progress-percentage">{{ Math.round(loadingStates.progress) }}%</div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: `${loadingStates.progress}%` }"></div>
-        </div>
-        <div class="progress-tip">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
-          <span>{{ currentTip }}</span>
-        </div>
-      </div>
-
-      <div class="content-section">
-        <!-- 左侧区域 -->
-        <div class="left-section">
-          <!-- 知识点区域 -->
-          <div class="card knowledge-section">
-            <div class="card-header">
-              <div class="card-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        
+        <ul class="nav-menu">
+          <li class="nav-item" :class="{ active: currentView === 'home' }">
+            <a href="#" class="nav-link" @click.prevent="switchView('home')">
+              <span class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
-                <span>知识点</span>
-              </div>
-              <div class="related-keywords" v-if="knowledgeData?.related_keywords?.length">
-                相关词：{{ knowledgeData.related_keywords.join('、') }}
-              </div>
+              </span>
+              <span class="nav-text">主页</span>
+            </a>
+          </li>
+          
+          <li class="nav-item" :class="{ active: currentView === 'graph' }">
+            <a href="#" class="nav-link" @click.prevent="switchView('graph')">
+              <span class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </span>
+              <span class="nav-text">知识图谱</span>
+            </a>
+          </li>
+          
+          <li class="nav-item" :class="{ active: currentView === 'knowledge' }">
+            <a href="#" class="nav-link" @click.prevent="switchView('knowledge')">
+              <span class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </span>
+              <span class="nav-text">知识点</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- 主页内容 -->
+      <div v-if="currentView === 'home'" :class="{'home-centered': !hasSearched, 'home-full': hasSearched}">
+        <div class="search-container">
+          <!-- MediGraphRAG Logo -->
+          <div class="search-logo-container">
+            <div class="search-logo">
+              <svg class="graph-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+              </svg>
+              <span class="logo-text-main">MediGraphRAG</span>
             </div>
-            <div class="card-content custom-scrollbar">
-              <div v-if="loading" class="skeleton-container">
-                <div class="skeleton-item" v-for="i in 5" :key="i"></div>
+            <div class="search-logo-subtitle">医疗知识图谱的LLM RAG 搜索</div>
+          </div>
+          
+          <!-- 搜索区域 -->
+          <div class="search-section" :class="{'search-centered': !hasSearched}">
+            <div class="search-wrapper">
+              <div class="search-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
               </div>
-              <div v-else-if="knowledgeData?.cleaned_knowledge" class="knowledge-list">
-                <div v-for="(item, index) in knowledgeData.cleaned_knowledge" :key="index" class="knowledge-item animate-fade-in">
-                  {{ item }}
+              <input 
+                type="text" 
+                v-model="keyword" 
+                placeholder="输入医学关键词进行搜索..." 
+                class="search-input"
+                @keyup.enter="fetchKnowledgeAndQuestion"
+                :disabled="loading"
+              >
+              <button v-if="!loading" 
+                class="search-button" 
+                @click="fetchKnowledgeAndQuestion"
+              >
+                <span>搜索</span>
+              </button>
+              <button v-else
+                class="search-button cancel-button" 
+                @click="cancelRequest"
+              >
+                <span>取消</span>
+              </button>
+            </div>
+            <div v-if="error" class="error-message">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              {{ error }}
+            </div>
+          </div>
+        </div>
+        
+        <!-- 只有当已搜索过时才显示以下内容 -->
+        <template v-if="hasSearched">
+          <!-- 加载进度条 -->
+          <div v-if="loading" class="progress-container">
+            <div class="progress-status">
+              <div class="status-text">{{ loadingStates.status }}</div>
+              <div class="progress-percentage">{{ Math.round(loadingStates.progress) }}%</div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: `${loadingStates.progress}%` }"></div>
+            </div>
+            <div class="progress-tip">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>{{ currentTip }}</span>
+            </div>
+          </div>
+
+          <div class="content-section">
+            <!-- 左侧区域 -->
+            <div class="left-section">
+              <!-- 知识点区域 -->
+              <div class="card knowledge-section">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                    </svg>
+                    <span>知识点</span>
+                  </div>
+                  <div class="related-keywords" v-if="knowledgeData?.related_keywords?.length">
+                    相关词：{{ knowledgeData.related_keywords.join('、') }}
+                  </div>
+                </div>
+                <div class="card-content custom-scrollbar">
+                  <div v-if="loading" class="skeleton-container">
+                    <div class="skeleton-item" v-for="i in 5" :key="i"></div>
+                  </div>
+                  <div v-else-if="knowledgeData?.cleaned_knowledge" class="knowledge-list">
+                    <div v-for="(item, index) in knowledgeData.cleaned_knowledge" :key="index" class="knowledge-item animate-fade-in">
+                      {{ item }}
+                    </div>
+                  </div>
+                  <div v-else class="empty-state">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <div>输入关键词开始搜索</div>
+                  </div>
                 </div>
               </div>
-              <div v-else class="empty-state">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                <div>输入关键词开始搜索</div>
-              </div>
-            </div>
-          </div>
 
-          <!-- 图谱区域 -->
-          <div class="card graph-section">
-            <div class="card-header">
-              <div class="card-title">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="12" r="4"></circle>
-                  <line x1="21.17" y1="8" x2="12" y2="8"></line>
-                  <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
-                  <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
-                </svg>
-                <span>知识图谱</span>
-              </div>
-              <div v-if="graphData" class="graph-info">
-                关键词: {{ graphData.query }}
-              </div>
-            </div>
-            <div class="card-content graph-content custom-scrollbar">
-              <div v-if="graphLoading" class="skeleton-container skeleton-graph">
-                <div class="skeleton-circle"></div>
-                <div class="skeleton-lines">
-                  <div class="skeleton-line"></div>
-                  <div class="skeleton-line"></div>
-                  <div class="skeleton-line"></div>
+              <!-- 图谱区域 -->
+              <div class="card graph-section">
+                <div class="card-header">
+                  <div class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                      <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                      <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+                    </svg>
+                    <span>知识图谱</span>
+                  </div>
+                  <div v-if="graphData" class="graph-info">
+                    关键词: {{ graphData.query }}
+                  </div>
+                </div>
+                <div class="card-content graph-content custom-scrollbar">
+                  <div v-if="graphLoading" class="skeleton-container skeleton-graph">
+                    <div class="skeleton-circle"></div>
+                    <div class="skeleton-lines">
+                      <div class="skeleton-line"></div>
+                      <div class="skeleton-line"></div>
+                      <div class="skeleton-line"></div>
+                    </div>
+                  </div>
+                  <div v-if="graphError" class="graph-error-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    {{ graphError }}
+                  </div>
+                  <div id="neovis-graph" ref="graphContainer" class="graph-container"></div>
+                  <div v-if="!keyword" class="graph-placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <div>搜索关键词查看知识图谱</div>
+                  </div>
                 </div>
               </div>
-              <div v-if="graphError" class="graph-error-message">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                {{ graphError }}
+            </div>
+
+            <!-- 右侧试题区域 -->
+            <div class="card quiz-section">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <span>试题</span>
+                </div>
               </div>
-              <div id="neovis-graph" ref="graphContainer" class="graph-container"></div>
-              <div v-if="!keyword" class="graph-placeholder">
-                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-                <div>搜索关键词查看知识图谱</div>
+              <div class="card-content custom-scrollbar">
+                <div v-if="loading" class="skeleton-container">
+                  <div class="skeleton-item skeleton-question"></div>
+                  <div class="skeleton-options">
+                    <div class="skeleton-option" v-for="i in 4" :key="i"></div>
+                  </div>
+                </div>
+                <div v-else-if="knowledgeData?.question" class="question-container animate-fade-in">
+                  <div class="question-topic">{{ knowledgeData.question.topic }}</div>
+                  <div class="options-list">
+                    <div 
+                      v-for="(option, key) in knowledgeData.question.options" 
+                      :key="key"
+                      class="option-item"
+                      :class="{
+                        'selected': selectedAnswer === key,
+                        'correct': showAnswer && key === knowledgeData.question.answer,
+                        'incorrect': showAnswer && selectedAnswer === key && key !== knowledgeData.question.answer
+                      }"
+                      @click="!showAnswer && checkAnswer(key)"
+                    >
+                      <div class="option-marker">{{ key }}</div>
+                      <div class="option-text">{{ option }}</div>
+                    </div>
+                  </div>
+                  <div v-if="showAnswer" class="answer-section animate-fade-in">
+                    <div class="answer-header">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                      <span>答案解析</span>
+                    </div>
+                    <div class="answer">
+                      <div class="answer-label">正确答案</div>
+                      <div class="answer-content">{{ knowledgeData.question.answer }}</div>
+                    </div>
+                    <div class="parse">
+                      <div class="parse-label">解析</div>
+                      <div class="parse-content">{{ knowledgeData.question.parse }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="empty-state">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                  </svg>
+                  <div>搜索后显示相关试题</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 右侧试题区域 -->
-        <div class="card quiz-section">
+        </template>
+      </div>
+      
+      <!-- 知识图谱独立视图 -->
+      <div v-if="currentView === 'graph'" class="graph-view-container">
+        <!-- 图谱区域 -->
+        <div class="card graph-section graph-full">
           <div class="card-header">
             <div class="card-title">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
               </svg>
-              <span>试题</span>
+              <span>知识图谱</span>
+            </div>
+            <div v-if="graphData" class="graph-info">
+              关键词: {{ graphData.query }}
             </div>
           </div>
-          <div class="card-content custom-scrollbar">
-            <div v-if="loading" class="skeleton-container">
-              <div class="skeleton-item skeleton-question"></div>
-              <div class="skeleton-options">
-                <div class="skeleton-option" v-for="i in 4" :key="i"></div>
+          <div class="card-content graph-content custom-scrollbar">
+            <div v-if="graphLoading" class="skeleton-container skeleton-graph">
+              <div class="skeleton-circle"></div>
+              <div class="skeleton-lines">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
               </div>
             </div>
-            <div v-else-if="knowledgeData?.question" class="question-container animate-fade-in">
-              <div class="question-topic">{{ knowledgeData.question.topic }}</div>
-              <div class="options-list">
-                <div 
-                  v-for="(option, key) in knowledgeData.question.options" 
-                  :key="key"
-                  class="option-item"
-                  :class="{
-                    'selected': selectedAnswer === key,
-                    'correct': showAnswer && key === knowledgeData.question.answer,
-                    'incorrect': showAnswer && selectedAnswer === key && key !== knowledgeData.question.answer
-                  }"
-                  @click="!showAnswer && checkAnswer(key)"
-                >
-                  <div class="option-marker">{{ key }}</div>
-                  <div class="option-text">{{ option }}</div>
-                </div>
-              </div>
-              <div v-if="showAnswer" class="answer-section animate-fade-in">
-                <div class="answer-header">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  <span>答案解析</span>
-                </div>
-                <div class="answer">
-                  <div class="answer-label">正确答案</div>
-                  <div class="answer-content">{{ knowledgeData.question.answer }}</div>
-                </div>
-                <div class="parse">
-                  <div class="parse-label">解析</div>
-                  <div class="parse-content">{{ knowledgeData.question.parse }}</div>
-                </div>
+            <div v-if="graphError" class="graph-error-message">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              {{ graphError }}
+            </div>
+            <div id="neovis-graph-full" ref="graphFullContainer" class="graph-container graph-container-full"></div>
+            <div v-if="!keyword" class="graph-placeholder">
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              <div>搜索关键词查看知识图谱</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 知识点独立视图 -->
+      <div v-if="currentView === 'knowledge'" class="knowledge-view-container">
+        <!-- 知识点区域 -->
+        <div class="card knowledge-section knowledge-full">
+          <div class="card-header">
+            <div class="card-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              <span>知识点</span>
+            </div>
+            <div class="related-keywords" v-if="knowledgeData?.related_keywords?.length">
+              相关词：{{ knowledgeData.related_keywords.join('、') }}
+            </div>
+          </div>
+          <div class="card-content custom-scrollbar knowledge-content-full">
+            <div v-if="loading" class="skeleton-container">
+              <div class="skeleton-item" v-for="i in 10" :key="i"></div>
+            </div>
+            <div v-else-if="knowledgeData?.cleaned_knowledge" class="knowledge-list">
+              <div v-for="(item, index) in knowledgeData.cleaned_knowledge" :key="index" class="knowledge-item animate-fade-in">
+                {{ item }}
               </div>
             </div>
             <div v-else class="empty-state">
@@ -848,7 +1239,7 @@ onMounted(() => {
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
-              <div>搜索后显示相关试题</div>
+              <div>输入关键词开始搜索</div>
             </div>
           </div>
         </div>
@@ -909,7 +1300,7 @@ html, body {
   padding: 25px;
   display: flex;
   flex-direction: column;
-  max-width: 1800px;
+  max-width: 80%;
   margin: 0 auto;
   width: 100%;
   min-height: 0;
@@ -921,6 +1312,7 @@ html, body {
 .search-section {
   background-color: white;
   padding: 20px;
+  margin: 30px 0px;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
@@ -1261,7 +1653,8 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-height: 400px;  /* 限制最大高度 */
+  max-height: 500px;  /* 限制最大高度 */
+  padding: 20px;
 }
 
 .knowledge-section .card-content {
@@ -1273,6 +1666,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 8px;  /* 进一步减小间距 */
+  padding: 10px 0px ;
 }
 
 .knowledge-item {
@@ -1303,6 +1697,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 25px;
+  padding: 20px;
 }
 
 .question-topic {
@@ -1509,11 +1904,17 @@ html, body {
 
 .graph-container {
   width: 100%;
-  height: 520px;
+  height: 520px !important; /* 强制设置高度 */
   background-color: #fff;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  min-height: 300px; /* 设置最小高度 */
+}
+
+.graph-container-full {
+  height: calc(100vh - 220px) !important;
+  min-height: 400px;
 }
 
 .graph-content {
@@ -1563,5 +1964,243 @@ html, body {
   padding: 0;
   overflow: hidden;
   position: relative;
+}
+
+/* 添加左侧导航栏样式 */
+.left-navigation {
+  width: 220px;
+  height: 100vh;
+  background-color: #fff;
+  border-right: 1px solid #eaedf0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.nav-logo {
+  height: 60px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eaedf0;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.collapse-btn {
+  font-size: 18px;
+  color: #8c9bab;
+  cursor: pointer;
+}
+
+.nav-menu {
+  flex: 1;
+  list-style: none;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  margin-bottom: 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  color: #5a6877;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.nav-link:hover {
+  background-color: #f5f7f9;
+}
+
+.nav-item.active .nav-link {
+  color: #2e6edf;
+  background-color: #e6f0ff;
+  font-weight: 500;
+}
+
+.nav-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c9bab;
+}
+
+.nav-item.active .nav-icon {
+  color: #2e6edf;
+}
+
+.nav-text {
+  font-size: 14px;
+}
+
+.nav-footer {
+  padding: 20px 0;
+  border-top: 1px solid #eaedf0;
+}
+
+/* 调整主内容区域以适应导航栏 */
+.app-container {
+  display: flex;
+}
+
+.main-content {
+  margin-left: 55px;
+  width: calc(100% - 220px);
+  padding: 25px;
+  min-height: 100vh;
+  max-width: 100%;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 992px) {
+  .left-navigation {
+    width: 60px;
+  }
+  
+  .nav-text, .collapse-btn {
+    display: none;
+  }
+  
+  .nav-icon {
+    margin-right: 0;
+  }
+  
+  .main-content {
+    margin-left: 60px;
+    width: calc(100% - 60px);
+  }
+}
+
+/* 知识图谱独立视图样式 */
+.graph-view-container {
+  width: 100%;
+  padding: 20px;
+}
+
+.graph-full {
+  width: 100%;
+  height: calc(100vh - 150px);
+}
+
+.graph-container-full {
+  height: calc(100vh - 220px);
+}
+
+/* 知识点独立视图样式 */
+.knowledge-view-container {
+  width: 100%;
+  padding: 20px;
+}
+
+.knowledge-full {
+  width: 100%;
+  height: calc(100vh - 150px);
+  max-height: none;
+}
+
+.knowledge-content-full {
+  max-height: none !important;
+  height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding: 25px;
+}
+
+/* 主页布局样式 */
+.home-centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 100px);
+}
+
+.home-full {
+  display: block;
+}
+
+.home-full .search-container {
+  margin-bottom: 20px;
+}
+
+.home-full .search-logo-container {
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.search-centered {
+  width: 650px;
+  max-width: 80%;
+  margin: 0;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+}
+
+.search-centered .search-wrapper {
+  height: 64px;
+}
+
+.search-centered .search-input {
+  height: 64px;
+  font-size: 18px;
+}
+
+.search-centered .search-button {
+  height: 52px;
+  padding: 0 32px;
+  font-size: 16px;
+}
+
+/* 搜索Logo样式 */
+.search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.search-logo-container {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.search-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.graph-icon {
+  color: #1e40af;
+  margin-right: 10px;
+}
+
+.logo-text-main {
+  font-size: 32px;
+  font-weight: bold;
+  background: linear-gradient(90deg, #1e40af, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.search-logo-subtitle {
+  font-size: 14px;
+  color: #64748b;
 }
 </style>
