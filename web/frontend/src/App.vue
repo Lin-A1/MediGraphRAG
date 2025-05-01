@@ -903,8 +903,11 @@ setTimeout(() => {
             </a>
           </li>
           
-          <li class="nav-item" :class="{ active: currentView === 'graph' }">
-            <a href="#" class="nav-link" @click.prevent="switchView('graph')">
+          <li class="nav-item" :class="{ 
+            active: currentView === 'graph',
+            disabled: !hasSearched 
+          }">
+            <a href="#" class="nav-link" @click.prevent="hasSearched && switchView('graph')">
               <span class="nav-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
@@ -914,8 +917,11 @@ setTimeout(() => {
             </a>
           </li>
           
-          <li class="nav-item" :class="{ active: currentView === 'knowledge' }">
-            <a href="#" class="nav-link" @click.prevent="switchView('knowledge')">
+          <li class="nav-item" :class="{ 
+            active: currentView === 'knowledge',
+            disabled: !hasSearched 
+          }">
+            <a href="#" class="nav-link" @click.prevent="hasSearched && switchView('knowledge')">
               <span class="nav-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1562,6 +1568,7 @@ html, body {
   gap: 15px;
   flex: 1;
   min-height: 0;
+  margin-bottom: 20px;
 }
 
 .left-section {
@@ -1968,7 +1975,7 @@ html, body {
 
 /* 添加左侧导航栏样式 */
 .left-navigation {
-  width: 220px;
+  width: 260px;  /* 增加宽度 */
   height: 100vh;
   background-color: #fff;
   border-right: 1px solid #eaedf0;
@@ -1982,8 +1989,8 @@ html, body {
 }
 
 .nav-logo {
-  height: 60px;
-  padding: 0 16px;
+  height: 70px;  /* 增加高度 */
+  padding: 0 20px;  /* 增加内边距 */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1991,7 +1998,7 @@ html, body {
 }
 
 .logo-text {
-  font-size: 18px;
+  font-size: 20px;  /* 增加字体大小 */
   font-weight: 600;
   color: #1e40af;
 }
@@ -2016,7 +2023,7 @@ html, body {
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 12px 20px;  /* 增加内边距 */
   color: #5a6877;
   text-decoration: none;
   transition: all 0.3s;
@@ -2045,7 +2052,7 @@ html, body {
 }
 
 .nav-text {
-  font-size: 14px;
+  font-size: 15px;  /* 增加字体大小 */
 }
 
 .nav-footer {
@@ -2054,13 +2061,9 @@ html, body {
 }
 
 /* 调整主内容区域以适应导航栏 */
-.app-container {
-  display: flex;
-}
-
 .main-content {
-  margin-left: 55px;
-  width: calc(100% - 220px);
+  margin-left: 260px;  /* 匹配导航栏宽度 */
+  width: calc(100% - 260px);
   padding: 25px;
   min-height: 100vh;
   max-width: 100%;
@@ -2072,18 +2075,24 @@ html, body {
     width: 60px;
   }
   
-  .nav-text, .collapse-btn {
-    display: none;
-  }
-  
-  .nav-icon {
-    margin-right: 0;
-  }
-  
   .main-content {
     margin-left: 60px;
     width: calc(100% - 60px);
   }
+}
+
+/* 添加导航项禁用状态 */
+.nav-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-item.disabled .nav-link {
+  pointer-events: none;
+}
+
+.nav-item.disabled .nav-link:hover {
+  background-color: transparent;
 }
 
 /* 知识图谱独立视图样式 */
@@ -2125,15 +2134,41 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 150px);
+  margin-top: -50px;
 }
 
 .home-full {
   display: block;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.home-full::-webkit-scrollbar {
+  width: 8px;
+}
+
+.home-full::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.home-full::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 4px;
+}
+
+.home-full::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .home-full .search-container {
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px 0;
+  z-index: 10;
 }
 
 .home-full .search-logo-container {
